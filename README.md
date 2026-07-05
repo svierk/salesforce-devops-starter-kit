@@ -25,7 +25,7 @@ Each building block lives in its own repository so it can be versioned and consu
 | [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org) | Create a scratch org (outputs `username` / `org-id`) |
 | [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org) | Delete a scratch org (cleanup) |
 | [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy) | Deploy metadata, with delta and validation-only (dry-run) modes |
-| [🧪 sfdx-run-tests](https://github.com/svierk/sfdx-run-tests) | Run Apex, LWC (Jest) and Flow tests with coverage reporting |
+| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests) | Run Apex, LWC (Jest) and Flow tests with coverage reporting |
 | [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review) | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint |
 | [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org |
 | [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import) | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON) |
