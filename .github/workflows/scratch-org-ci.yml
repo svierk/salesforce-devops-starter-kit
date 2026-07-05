@@ -1,0 +1,119 @@
+name: Scratch Org CI
+
+# Reusable workflow that runs a full scratch org lifecycle: it authenticates to
+# the Dev Hub, creates a scratch org, optionally installs dependency packages,
+# deploys the source, runs Apex tests, and always deletes the scratch org again.
+
+on:
+  workflow_call:
+    inputs:
+      source-dir:
+        description: Source directory to deploy to the scratch org.
+        required: false
+        type: string
+        default: force-app
+      definition-file:
+        description: Path to the scratch org definition file.
+        required: false
+        type: string
+        default: config/project-scratch-def.json
+      duration-days:
+        description: Number of days before the scratch org expires.
+        required: false
+        type: string
+        default: '1'
+      test-level:
+        description: Apex test level for the test run.
+        required: false
+        type: string
+        default: RunLocalTests
+      packages:
+        description: 'JSON array of dependency packages to install, e.g. "[''04t...'']". Leave empty to skip.'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      SFDX_CONSUMER_KEY:
+        description: Consumer key (client ID) of the Dev Hub connected app used for the JWT flow.
+        required: true
+      SFDX_JWT_SECRET_KEY:
+        description: Contents of the private server key (server.key) used for the JWT flow.
+        required: true
+      SFDX_USERNAME:
+        description: Username of the Dev Hub integration user to authenticate as.
+        required: true
+
+# Least-privilege token: this workflow only reads the repository and talks to
+# Salesforce via the CLI, it never writes back to GitHub.
+permissions:
+  contents: read
+
+jobs:
+  scratch-org-ci:
+    name: Scratch Org CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Node Version
+        uses: svierk/get-node-version@main
+
+      - name: Install SF CLI
+        uses: svierk/sfdx-cli-setup@main
+
+      - name: Authorize Dev Hub
+        uses: svierk/sfdx-login@main
+        with:
+          client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
+          jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+          username: ${{ secrets.SFDX_USERNAME }}
+          set-default-dev-hub: true
+          alias: devhub
+
+      - name: Create Scratch Org
+        id: scratch
+        uses: svierk/sfdx-create-scratch-org@main
+        with:
+          target-dev-hub: devhub
+          definition-file: ${{ inputs.definition-file }}
+          duration-days: ${{ inputs.duration-days }}
+          set-default: true
+          alias: scratch-${{ github.run_id }}
+
+      - name: Install Dependency Packages
+        if: ${{ inputs.packages != '' }}
+        uses: svierk/sfdx-package-installation@main
+        with:
+          packages: ${{ inputs.packages }}
+          target-org: ${{ steps.scratch.outputs.username }}
+          wait: 30
+          publish-wait: 20
+
+      - name: Deploy Metadata
+        uses: svierk/sfdx-deploy@main
+        with:
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ steps.scratch.outputs.username }}
+          destructive-changes: false # fresh scratch org: additive deploy, nothing to delete
+
+      - name: Run Tests
+        uses: svierk/sfdx-run-tests@main
+        with:
+          apex: true
+          target-org: ${{ steps.scratch.outputs.username }}
+          test-level: ${{ inputs.test-level }}
+          apex-output-dir: ./tests/apex
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-test-results
+          path: ./tests/apex
+
+      - name: Delete Scratch Org
+        if: always()
+        uses: svierk/sfdx-delete-scratch-org@main
+        with:
+          target-org: ${{ steps.scratch.outputs.username }}

@@ -1,0 +1,29 @@
+# Example: call the reusable deployment workflow.
+# Copy this file into your project's .github/workflows/ directory.
+
+name: Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@main
+    with:
+      source-dir: force-app
+      target-org-alias: production
+      test-level: RunLocalTests
+      dry-run: false
+      # Gate this deployment behind a GitHub Environment (required reviewers,
+      # environment-scoped secrets). Create it under Settings → Environments and
+      # store the production credentials there. Remove to deploy without one.
+      environment: production
+      # For an incremental deployment of changed components only:
+      # delta: true
+      # delta-from: <previous release tag or commit>
+    secrets:
+      SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
+      SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}

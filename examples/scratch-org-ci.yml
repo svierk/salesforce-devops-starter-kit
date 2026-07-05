@@ -1,0 +1,25 @@
+# Example: call the reusable scratch org CI workflow.
+# Copy this file into your project's .github/workflows/ directory.
+
+name: Scratch Org CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scratch-org-ci:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@main
+    with:
+      source-dir: force-app
+      definition-file: config/project-scratch-def.json
+      duration-days: '1'
+      test-level: RunLocalTests
+      # Optional dependency packages to install before deploying:
+      # packages: "['04t...']"
+    secrets:
+      SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
+      SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}

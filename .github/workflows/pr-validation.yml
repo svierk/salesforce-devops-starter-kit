@@ -1,0 +1,106 @@
+name: PR Validation
+
+# Reusable workflow that validates a pull request without changing the target
+# org: it runs static code analysis and a check-only (dry-run) delta deployment
+# including Apex tests. Call it from your own repository via `uses:`.
+
+on:
+  workflow_call:
+    inputs:
+      source-dir:
+        description: Source directory to analyze and validate.
+        required: false
+        type: string
+        default: force-app
+      target-org-alias:
+        description: Alias used for the authenticated validation org.
+        required: false
+        type: string
+        default: ci
+      test-level:
+        description: Apex test level for the validation deployment.
+        required: false
+        type: string
+        default: RunLocalTests
+      delta:
+        description: Validate only the components changed in the pull request.
+        required: false
+        type: boolean
+        default: true
+      run-code-review:
+        description: Run the code review (Salesforce Code Analyzer).
+        required: false
+        type: boolean
+        default: true
+      severity-threshold:
+        description: Fail if a code analyzer violation with this severity or higher is found.
+        required: false
+        type: string
+        default: '3'
+    secrets:
+      SFDX_CONSUMER_KEY:
+        description: Consumer key (client ID) of the connected app used for the JWT flow.
+        required: true
+      SFDX_JWT_SECRET_KEY:
+        description: Contents of the private server key (server.key) used for the JWT flow.
+        required: true
+      SFDX_USERNAME:
+        description: Username of the integration user to authenticate as.
+        required: true
+
+# Least-privilege token: read the repository, plus write the code analysis
+# results back as a SARIF report (required by the upload-sarif step).
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Node Version
+        uses: svierk/get-node-version@main
+
+      - name: Install SF CLI
+        uses: svierk/sfdx-cli-setup@main
+
+      - name: Salesforce Org Login
+        uses: svierk/sfdx-login@main
+        with:
+          client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
+          jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+          username: ${{ secrets.SFDX_USERNAME }}
+          alias: ${{ inputs.target-org-alias }}
+
+      - name: Code Review
+        if: ${{ inputs.run-code-review }}
+        continue-on-error: true
+        uses: svierk/sfdx-code-review@main
+        with:
+          code-analyzer: true
+          workspace: ${{ inputs.source-dir }}
+          output-file: results.sarif
+          severity-threshold: ${{ inputs.severity-threshold }}
+
+      - name: Upload SARIF
+        if: ${{ inputs.run-code-review }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+      - name: Validate Deployment (dry-run)
+        uses: svierk/sfdx-deploy@main
+        with:
+          source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
+          delta: ${{ inputs.delta }}
+          delta-from: origin/${{ github.base_ref }}
+          delta-to: HEAD
+          target-org: ${{ inputs.target-org-alias }}
+          test-level: ${{ inputs.test-level }}
+          dry-run: true

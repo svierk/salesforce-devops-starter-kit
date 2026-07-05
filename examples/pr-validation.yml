@@ -1,0 +1,22 @@
+# Example: call the reusable PR validation workflow.
+# Copy this file into your project's .github/workflows/ directory.
+
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@main
+    with:
+      source-dir: force-app
+      test-level: RunLocalTests
+      delta: true
+      run-code-review: true
+      severity-threshold: '3'
+    secrets:
+      SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
+      SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}

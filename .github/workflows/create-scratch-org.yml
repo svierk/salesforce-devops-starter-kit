@@ -1,0 +1,188 @@
+name: Create Scratch Org
+
+# Reusable workflow that provisions a ready-to-use scratch org as a self-service
+# task: it authenticates to the Dev Hub, creates a scratch org, optionally
+# installs dependency packages, deploys the source, imports sample data, and
+# generates a login password so the org can be handed over to a project member.
+#
+# Designed to be called from a `workflow_dispatch` caller (see
+# examples/create-scratch-org.yml) so that even non-technical team members can
+# request a fresh org straight from the GitHub Actions tab.
+
+on:
+  workflow_call:
+    inputs:
+      org-name:
+        description: Human-readable name for the scratch org.
+        required: false
+        type: string
+        default: ''
+      description:
+        description: Description stored on the scratch org.
+        required: false
+        type: string
+        default: ''
+      admin-email:
+        description: Email address of the scratch org admin user.
+        required: false
+        type: string
+        default: ''
+      duration-days:
+        description: Number of days before the scratch org expires (1-30).
+        required: false
+        type: string
+        default: '7'
+      source-dir:
+        description: Source directory to deploy to the scratch org.
+        required: false
+        type: string
+        default: force-app
+      definition-file:
+        description: Path to the scratch org definition file.
+        required: false
+        type: string
+        default: config/project-scratch-def.json
+      deploy-metadata:
+        description: Deploy the project source after the org is created.
+        required: false
+        type: boolean
+        default: true
+      install-packages:
+        description: Install dependency packages before deploying.
+        required: false
+        type: boolean
+        default: false
+      packages:
+        description: 'JSON array of dependency packages to install, e.g. "[''04t...'']".'
+        required: false
+        type: string
+        default: ''
+      import-data:
+        description: Import sample data after the deployment.
+        required: false
+        type: boolean
+        default: false
+      csv-file-path:
+        description: Path to a CSV file imported via the Bulk API 2.0. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      csv-object-type:
+        description: sObject type of the records in the CSV file (required when csv-file-path is set).
+        required: false
+        type: string
+        default: ''
+      json-file-path:
+        description: Comma-separated sObject Tree JSON file(s) to import. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+    secrets:
+      SFDX_CONSUMER_KEY:
+        description: Consumer key (client ID) of the Dev Hub connected app used for the JWT flow.
+        required: true
+      SFDX_JWT_SECRET_KEY:
+        description: Contents of the private server key (server.key) used for the JWT flow.
+        required: true
+      SFDX_USERNAME:
+        description: Username of the Dev Hub integration user to authenticate as.
+        required: true
+
+# Least-privilege token: this workflow only reads the repository and talks to
+# Salesforce via the CLI, it never writes back to GitHub.
+permissions:
+  contents: read
+
+jobs:
+  create-scratch-org:
+    name: Create Scratch Org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Node Version
+        uses: svierk/get-node-version@main
+
+      - name: Install SF CLI
+        uses: svierk/sfdx-cli-setup@main
+
+      - name: Authorize Dev Hub
+        uses: svierk/sfdx-login@main
+        with:
+          client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
+          jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+          username: ${{ secrets.SFDX_USERNAME }}
+          set-default: true
+          set-default-dev-hub: true
+          alias: devhub
+
+      - name: Create Scratch Org
+        id: scratch
+        uses: svierk/sfdx-create-scratch-org@main
+        with:
+          target-dev-hub: devhub
+          definition-file: ${{ inputs.definition-file }}
+          duration-days: ${{ inputs.duration-days }}
+          name: ${{ inputs.org-name }}
+          description: ${{ inputs.description }}
+          admin-email: ${{ inputs.admin-email }}
+          set-default: true
+          alias: scratch-${{ github.run_id }}
+
+      - name: Install Dependency Packages
+        if: ${{ inputs.install-packages && inputs.packages != '' }}
+        uses: svierk/sfdx-package-installation@main
+        with:
+          packages: ${{ inputs.packages }}
+          target-org: ${{ steps.scratch.outputs.username }}
+          wait: 30
+          publish-wait: 20
+
+      - name: Deploy Metadata
+        if: ${{ inputs.deploy-metadata }}
+        uses: svierk/sfdx-deploy@main
+        with:
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ steps.scratch.outputs.username }}
+          destructive-changes: false # fresh scratch org: additive deploy, nothing to delete
+
+      - name: Import CSV Data
+        if: ${{ inputs.import-data && inputs.csv-file-path != '' }}
+        uses: svierk/sfdx-data-import@main
+        with:
+          file-path: ${{ inputs.csv-file-path }}
+          object-type: ${{ inputs.csv-object-type }}
+          external-id: Id
+          target-org: ${{ steps.scratch.outputs.username }}
+
+      - name: Import JSON Data
+        if: ${{ inputs.import-data && inputs.json-file-path != '' }}
+        uses: svierk/sfdx-data-import@main
+        with:
+          file-path: ${{ inputs.json-file-path }}
+          target-org: ${{ steps.scratch.outputs.username }}
+
+      - name: Generate Login Password
+        env:
+          TARGET_ORG: ${{ steps.scratch.outputs.username }}
+        run: |
+          # Keep the generated password out of the plain build log: mask it in the
+          # log stream (::add-mask::) and surface the credentials only in the job
+          # summary. Note the summary is still visible to anyone with Actions read
+          # access — restrict who can run/read this workflow, or switch to a private
+          # hand-over channel (e.g. email the admin-email) if that is too broad.
+          password=$(sf org generate password --target-org "$TARGET_ORG" --json | jq -r '.result.password')
+          echo "::add-mask::$password"
+          instance_url=$(sf org display --target-org "$TARGET_ORG" --json | jq -r '.result.instanceUrl')
+          {
+            echo "### 🌩️ Scratch org ready for handover"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Username | \`$TARGET_ORG\` |"
+            echo "| Password | \`$password\` |"
+            echo "| Instance URL | $instance_url |"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,16 @@
+# Salesforce CLI credential artifacts (never commit these)
+authFile.json
+server.key
+server.crt
+.sf/
+.sfdx/
+
+# CI output
+results.sarif
+results.html
+results.json
+test-results/
+changed-sources/
+
+# Node
+node_modules/

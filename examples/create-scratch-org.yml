@@ -1,0 +1,55 @@
+# Example: self-service scratch org creation.
+# Copy this file into your project's .github/workflows/ directory. Team members
+# then run it on demand from the Actions tab ("Run workflow") and fill in the
+# form below — no local Salesforce CLI setup required.
+
+name: Create Scratch Org
+
+on:
+  workflow_dispatch:
+    inputs:
+      org-name:
+        description: Scratch org name
+        type: string
+      description:
+        description: Scratch org description
+        type: string
+      admin-email:
+        description: Admin user email
+        type: string
+      duration-days:
+        description: Lifespan in days (1-30)
+        type: string
+        default: '7'
+      install-packages:
+        description: Install dependency packages?
+        type: boolean
+        default: false
+      import-data:
+        description: Import sample data?
+        type: boolean
+        default: true
+
+jobs:
+  create-scratch-org:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@main
+    with:
+      org-name: ${{ inputs.org-name }}
+      description: ${{ inputs.description }}
+      admin-email: ${{ inputs.admin-email }}
+      duration-days: ${{ inputs.duration-days }}
+      source-dir: force-app
+      deploy-metadata: true
+      install-packages: ${{ inputs.install-packages }}
+      # Dependency packages to install when "Install dependency packages?" is checked:
+      # packages: "['04t...']"
+      import-data: ${{ inputs.import-data }}
+      # Sample data imported when "Import sample data?" is checked (CSV via Bulk API 2.0,
+      # JSON via sObject Tree). Point these at files that exist in your repository:
+      csv-file-path: ./data/accounts.csv
+      csv-object-type: Account
+      json-file-path: ./data/accounts.json,./data/contacts.json
+    secrets:
+      SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
+      SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
+      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
