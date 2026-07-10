@@ -1,0 +1,17 @@
+{
+  "name": "salesforce-devops-starter-kit-docs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Documentation site for the Salesforce DevOps Starter Kit, generated from the repository content.",
+  "license": "MIT",
+  "scripts": {
+    "docs:generate": "node scripts/docs/generate.mjs",
+    "docs:dev": "npm run docs:generate && vitepress dev docs",
+    "docs:build": "npm run docs:generate && vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "yaml": "^2.6.1"
+  }
+}

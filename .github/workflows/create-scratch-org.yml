@@ -172,7 +172,7 @@ jobs:
           # Keep the generated password out of the plain build log: mask it in the
           # log stream (::add-mask::) and surface the credentials only in the job
           # summary. Note the summary is still visible to anyone with Actions read
-          # access — restrict who can run/read this workflow, or switch to a private
+          # access - restrict who can run/read this workflow, or switch to a private
           # hand-over channel (e.g. email the admin-email) if that is too broad.
           password=$(sf org generate password --target-org "$TARGET_ORG" --json | jq -r '.result.password')
           echo "::add-mask::$password"

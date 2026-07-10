@@ -16,7 +16,7 @@ Follow [authentication.md](authentication.md) to authenticate your org with the 
 
 You have two ways to adopt the kit:
 
-### Option 1 — Use a reusable workflow (fastest)
+### Option 1 - Use a reusable workflow (fastest)
 
 Copy one of the [examples](../examples) into your project's `.github/workflows/` directory. For pull request validation:
 
@@ -40,7 +40,7 @@ jobs:
 
 Commit it, open a pull request, and watch the validation run.
 
-### Option 2 — Compose your own pipeline
+### Option 2 - Compose your own pipeline
 
 If you need more control, wire the building blocks together yourself:
 
@@ -97,4 +97,4 @@ jobs:
 
 ## Building block reference
 
-Every action documents its full inputs and outputs in its own repository — see the [building blocks catalog](../README.md#-building-blocks).
+Every action documents its full inputs and outputs in its own repository - see the [building blocks catalog](../README.md#-building-blocks).

@@ -8,10 +8,10 @@ The kit is built around a set of small, focused [GitHub Actions](#-building-bloc
 
 ## 🧱 Philosophy
 
-- **GitHub-native** — no external DevOps platform required, just GitHub and GitHub Actions.
-- **Composable** — small actions with clear inputs and outputs that you wire together freely.
-- **Transparent** — every action is a thin, readable wrapper around the official `sf` CLI.
-- **Flexible** — use the turnkey reusable workflows, or build your own pipeline from the blocks.
+- **GitHub-native** - no external DevOps platform required, just GitHub and GitHub Actions.
+- **Composable** - small actions with clear inputs and outputs that you wire together freely.
+- **Transparent** - every action is a thin, readable wrapper around the official `sf` CLI.
+- **Flexible** - use the turnkey reusable workflows, or build your own pipeline from the blocks.
 
 ## 🧩 Building Blocks
 
@@ -78,7 +78,7 @@ flowchart TD
 ### Prerequisites
 
 1. A Salesforce **Dev Hub** (for scratch org flows) and/or the target orgs you want to deploy to.
-2. A CI integration user authenticated with the **JWT bearer flow** — the recommended, production-ready option used throughout this kit.
+2. A CI integration user authenticated with the **JWT bearer flow** - the recommended, production-ready option used throughout this kit.
 3. The credentials stored as **GitHub Actions secrets**: `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME`.
 
 See [docs/authentication.md](docs/authentication.md) for a step-by-step JWT setup (and the simpler SFDX Auth URL alternative for local experiments).
@@ -124,7 +124,7 @@ jobs:
 
 ## 🔁 Reusable Workflows
 
-For common scenarios you don't have to wire the blocks together yourself — call one of the maintained [reusable workflows](.github/workflows) instead:
+For common scenarios you don't have to wire the blocks together yourself - call one of the maintained [reusable workflows](.github/workflows) instead:
 
 | Workflow | Purpose |
 | -------- | ------- |
@@ -153,20 +153,20 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 
 ## 📚 Documentation
 
-- [docs/getting-started.md](docs/getting-started.md) — set up your first pipeline end to end
-- [docs/authentication.md](docs/authentication.md) — configure SFDX Auth URL and JWT authentication
+- [docs/getting-started.md](docs/getting-started.md) - set up your first pipeline end to end
+- [docs/authentication.md](docs/authentication.md) - configure SFDX Auth URL and JWT authentication
 
 ## 🏷️ Versioning recommendation
 
-The examples in this kit reference the actions with `@main` for readability. In real pipelines this is also a **supply-chain risk**: a mutable ref runs whatever code is on that branch at run time — with access to your secrets — so a compromised or rewritten `@main` (of any action, including third-party ones like `actions/checkout`) would run unnoticed.
+The examples in this kit reference the actions with `@main` for readability. In real pipelines this is also a **supply-chain risk**: a mutable ref runs whatever code is on that branch at run time - with access to your secrets - so a compromised or rewritten `@main` (of any action, including third-party ones like `actions/checkout`) would run unnoticed.
 
 For production pipelines, **pin every action**:
 
-- **Best — pin to a full-length commit SHA**, e.g. `svierk/sfdx-deploy@a1b2c3d…`. A SHA is immutable, so the code can never change under you. Tags (`@v1`) are convenient but can be re-pointed by the maintainer.
-- **Good — pin to a released tag** (e.g. `svierk/sfdx-deploy@v1`) if you trust the publisher and prefer readability over immutability.
+- **Best - pin to a full-length commit SHA**, e.g. `svierk/sfdx-deploy@a1b2c3d…`. A SHA is immutable, so the code can never change under you. Tags (`@v1`) are convenient but can be re-pointed by the maintainer.
+- **Good - pin to a released tag** (e.g. `svierk/sfdx-deploy@v1`) if you trust the publisher and prefer readability over immutability.
 - Enable [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot) for `github-actions` so pinned SHAs/tags are bumped via reviewed pull requests instead of drifting silently.
 
-This applies to **all** actions your workflows reference — the building blocks in this kit as well as `actions/*` and any other third-party action.
+This applies to **all** actions your workflows reference - the building blocks in this kit as well as `actions/*` and any other third-party action.
 
 ## 🤝 Contributing
 

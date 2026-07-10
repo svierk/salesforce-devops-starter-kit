@@ -1,0 +1,56 @@
+{
+  "owner": "svierk",
+  "repo": "salesforce-devops-starter-kit",
+  "hero": {
+    "name": "Salesforce DevOps Starter Kit",
+    "text": "CI/CD building blocks for Salesforce",
+    "tagline": "Compose flexible, GitHub-native pipelines from small, focused Actions - or drop in a ready-made reusable workflow and be productive in minutes.",
+    "image": {
+      "src": "/images/salesforce-devops-starter-kit-hero.jpg",
+      "alt": "Composable GitHub Actions building blocks for Salesforce CI/CD"
+    },
+    "actions": [
+      { "theme": "brand", "text": "Get started", "link": "/getting-started" },
+      { "theme": "alt", "text": "Reusable workflows", "link": "/workflows/pr-validation" },
+      { "theme": "alt", "text": "View on GitHub", "link": "https://github.com/svierk/salesforce-devops-starter-kit" }
+    ]
+  },
+  "workflows": [
+    { "file": "pr-validation.yml", "example": "pr-validation.yml", "slug": "pr-validation" },
+    { "file": "create-scratch-org.yml", "example": "create-scratch-org.yml", "slug": "create-scratch-org" },
+    { "file": "scratch-org-ci.yml", "example": "scratch-org-ci.yml", "slug": "scratch-org-ci" },
+    { "file": "deployment.yml", "example": "deployment.yml", "slug": "deployment" }
+  ],
+  "blockCategories": [
+    {
+      "text": "Setup & Auth",
+      "blocks": [
+        { "repo": "get-node-version", "icon": "🕵🏻", "tagline": "Resolve and set up the Node.js version from package.json." },
+        { "repo": "sfdx-cli-setup", "icon": "⚙️", "tagline": "Install the Salesforce CLI and related plugins." },
+        { "repo": "sfdx-login", "icon": "🔐", "tagline": "Authenticate to any org via SFDX Auth URL or the JWT flow." }
+      ]
+    },
+    {
+      "text": "Scratch Orgs",
+      "blocks": [
+        { "repo": "sfdx-create-scratch-org", "icon": "🌩️", "tagline": "Create a scratch org and output its username and org ID." },
+        { "repo": "sfdx-delete-scratch-org", "icon": "🗑️", "tagline": "Delete a scratch org to clean up after a pipeline run." }
+      ]
+    },
+    {
+      "text": "Deploy & Test",
+      "blocks": [
+        { "repo": "sfdx-deploy", "icon": "🚀", "tagline": "Deploy metadata, with delta and validation-only (dry-run) modes." },
+        { "repo": "sfdx-run-tests", "icon": "✅", "tagline": "Run Apex, LWC (Jest) and Flow tests with coverage reporting." }
+      ]
+    },
+    {
+      "text": "Quality & Data",
+      "blocks": [
+        { "repo": "sfdx-code-review", "icon": "🔎", "tagline": "Static quality gate: Code Analyzer, Prettier and ESLint." },
+        { "repo": "sfdx-package-installation", "icon": "📦", "tagline": "Install managed or unlocked packages on a target org." },
+        { "repo": "sfdx-data-import", "icon": "💾", "tagline": "Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)." }
+      ]
+    }
+  ]
+}

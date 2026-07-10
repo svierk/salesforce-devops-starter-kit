@@ -37,7 +37,7 @@ on:
         type: string
         default: ''
       environment:
-        description: Optional GitHub Environment to run in — enables protection rules (required reviewers) and environment-scoped secrets. Leave empty to run without one.
+        description: Optional GitHub Environment to run in - enables protection rules (required reviewers) and environment-scoped secrets. Leave empty to run without one.
         required: false
         type: string
         default: ''

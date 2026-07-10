@@ -4,9 +4,9 @@ CI/CD pipelines need a non-interactive way to authenticate to your Salesforce or
 
 > Always use a dedicated **integration user** for CI/CD, never a personal account, and grant it only the permissions it needs.
 
-**The reusable workflows and examples in this kit use the JWT flow (Option A)**, since it does not depend on a refresh token that can expire or be revoked — the closest match to a production-ready setup. The SFDX Auth URL (Option B) is offered as a quicker alternative for local experiments and throwaway scratch orgs.
+**The reusable workflows and examples in this kit use the JWT flow (Option A)**, since it does not depend on a refresh token that can expire or be revoked - the closest match to a production-ready setup. The SFDX Auth URL (Option B) is offered as a quicker alternative for local experiments and throwaway scratch orgs.
 
-## Option A — JWT bearer flow (recommended)
+## Option A - JWT bearer flow (recommended)
 
 Best for production and long-lived sandbox connections, as it does not rely on a refresh token.
 
@@ -20,9 +20,9 @@ Best for production and long-lived sandbox connections, as it does not rely on a
 
 3. Store these three values as repository secrets:
 
-   - `SFDX_CONSUMER_KEY` — the connected app's consumer key (client ID)
-   - `SFDX_JWT_SECRET_KEY` — the **contents** of `server.key`
-   - `SFDX_USERNAME` — the integration user's username
+   - `SFDX_CONSUMER_KEY` - the connected app's consumer key (client ID)
+   - `SFDX_JWT_SECRET_KEY` - the **contents** of `server.key`
+   - `SFDX_USERNAME` - the integration user's username
 
 4. Use them in a workflow:
 
@@ -35,7 +35,7 @@ Best for production and long-lived sandbox connections, as it does not rely on a
        username: ${{ secrets.SFDX_USERNAME }}
    ```
 
-## Option B — SFDX Auth URL (quickest)
+## Option B - SFDX Auth URL (quickest)
 
 Best for getting started and for throwaway scratch org / sandbox flows. Note that the reusable workflows in this kit expect the JWT secrets above; to use an Auth URL instead, swap the login step's inputs in your own composed pipeline (see the [getting started guide](getting-started.md)).
 
@@ -73,7 +73,7 @@ Best for getting started and for throwaway scratch org / sandbox flows. Note tha
 
 ## Storing secrets
 
-Add secrets under **Settings → Secrets and variables → Actions** in your repository (or organization). For environment-specific credentials (e.g. separate sandbox and production orgs), use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) with required reviewers for production deployments. The [deployment workflow](../.github/workflows/deployment.yml) accepts an `environment` input for exactly this — set it to your environment name (see [examples/deployment.yml](../examples/deployment.yml)) and store that environment's credentials as environment-scoped secrets.
+Add secrets under **Settings → Secrets and variables → Actions** in your repository (or organization). For environment-specific credentials (e.g. separate sandbox and production orgs), use [GitHub Environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) with required reviewers for production deployments. The [deployment workflow](../.github/workflows/deployment.yml) accepts an `environment` input for exactly this - set it to your environment name (see [examples/deployment.yml](../examples/deployment.yml)) and store that environment's credentials as environment-scoped secrets.
 
 ## References
 

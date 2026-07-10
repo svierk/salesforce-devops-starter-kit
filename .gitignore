@@ -14,3 +14,12 @@ changed-sources/
 
 # Node
 node_modules/
+
+# VitePress docs - build output and generated pages (regenerated on every build)
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/generated.json
+docs/index.md
+docs/workflows/
+docs/blocks/
+docs/public/

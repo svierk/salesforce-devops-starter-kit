@@ -1,0 +1,65 @@
+name: Docs
+
+# Builds the VitePress documentation site and deploys it to GitHub Pages.
+# The site is regenerated from the repository content (workflows, examples and
+# the building-block READMEs) by scripts/docs/generate.mjs on every build.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/*.yml'
+      - 'examples/**'
+      - 'docs/**'
+      - 'scripts/docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+# Least-privilege by default; the deploy job widens it to what Pages needs.
+permissions:
+  contents: read
+
+# Allow only one concurrent Pages deployment, without cancelling in-progress runs.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0 # required for the "last updated" timestamps
+
+      - name: Select Node Version
+        uses: svierk/get-node-version@main
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Docs
+        run: npm run docs:build
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@main
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main

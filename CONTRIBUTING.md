@@ -31,4 +31,4 @@ New blocks are welcome when they cover a distinct, reusable step of a Salesforce
 
 ## Code of conduct
 
-Be respectful and constructive. This is a community project for the Trailblazer Community — let's keep it welcoming.
+Be respectful and constructive. This is a community project for the Trailblazer Community - let's keep it welcoming.
