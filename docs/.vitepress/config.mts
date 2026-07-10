@@ -13,7 +13,7 @@ export default defineConfig({
   base: '/salesforce-devops-starter-kit/',
   cleanUrls: true,
   lastUpdated: true,
-  // Favicon — head link hrefs are not base-adjusted, so include the base prefix.
+  // Favicon - head link hrefs are not base-adjusted, so include the base prefix.
   head: [
     ['link', { rel: 'icon', type: 'image/png', href: '/salesforce-devops-starter-kit/images/salesforce-devops-starter-kit-hero-logo.png' }]
   ],

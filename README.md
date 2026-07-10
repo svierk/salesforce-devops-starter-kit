@@ -6,6 +6,10 @@ An open source starter kit for the Trailblazer Community that makes it easy to b
 
 The kit is built around a set of small, focused [GitHub Actions](#-building-blocks) that abstract away the complexity of the Salesforce CLI. Think of them as **building blocks**: each one does one job well, and you compose them into exactly the pipeline your project needs. On top of the building blocks, this repository provides ready-to-use [reusable workflows](#-reusable-workflows) and [copy-paste examples](#-examples) so you can get from zero to a working pipeline in minutes.
 
+The full **[documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** is an auto-generated catalog of every building block and reusable workflow - each with its complete input/secret reference and copy-paste examples.
+
+<a href="https://svierk.github.io/salesforce-devops-starter-kit/"><img src="https://img.shields.io/badge/Actions_Catalog-Explore_the_docs-0d6efd?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Explore the documentation" /></a>
+
 ## 🧱 Philosophy
 
 - **GitHub-native** - no external DevOps platform required, just GitHub and GitHub Actions.
@@ -153,6 +157,7 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 
 ## 📚 Documentation
 
+- 🌐 **[Documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** - the full building-block and workflow catalog, generated from this repository
 - [docs/getting-started.md](docs/getting-started.md) - set up your first pipeline end to end
 - [docs/authentication.md](docs/authentication.md) - configure SFDX Auth URL and JWT authentication
 
