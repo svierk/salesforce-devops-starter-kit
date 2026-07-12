@@ -12,8 +12,9 @@
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: linear-gradient(120deg, #0d6efd 30%, #17c0eb);
 
-  --vp-home-hero-image-background-image: linear-gradient(120deg, rgba(13, 110, 253, 0.5), rgba(23, 192, 235, 0.5));
-  --vp-home-hero-image-filter: blur(56px);
+  --hero-image-max-width: 370px;
+  --vp-home-hero-image-background-image: linear-gradient(120deg, rgba(13, 110, 253, 0.55), rgba(23, 192, 235, 0.55));
+  --vp-home-hero-image-filter: blur(48px);
 }
 
 .dark {
@@ -21,26 +22,115 @@
   --vp-c-brand-2: #6cadff;
   --vp-c-brand-3: #86bcff;
   --vp-c-brand-soft: rgba(77, 155, 255, 0.16);
+
+  /* The light-blue dark-mode brand colors are right for links, but as a solid
+   * button fill they leave too little contrast against the white label. Use a
+   * darker blue for the primary button only. */
+  --vp-button-brand-bg: #1f6feb;
+  --vp-button-brand-hover-bg: #388bfd;
+  --vp-button-brand-active-bg: #1158c7;
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-text: #ffffff;
+
+  /* On dark backgrounds the hero glow needs more opacity to shine through. */
+  --vp-home-hero-image-background-image: linear-gradient(120deg, rgba(13, 110, 253, 0.8), rgba(23, 192, 235, 0.8));
 }
 
-/* Slightly larger home hero illustration (VitePress default is 320px on desktop).
- * The glow (.image-bg) is sized relative to the container, so it scales along. */
-@media (min-width: 960px) {
-  .VPHero .image-container {
-    width: 400px;
-    height: 400px;
-  }
-
-  .VPHero .image-src {
-    max-width: 400px;
-    max-height: 400px;
-  }
+/**
+ * Home hero illustration.
+ *
+ * The default theme caps the hero image at 320px and frames it with a circular
+ * glow, absolutely positioned via transforms - at mid-size viewports this lets
+ * the image overlap the hero text and hug the right screen edge. Render the
+ * image as a plain, responsive block instead so it scales with its column, and
+ * stretch the glow (.image-bg) to the image's rectangle so the halo hugs it.
+ */
+.VPHero .image {
+  margin: 0 0 2.5rem;
 }
 
-/* Slightly rounded corners on the hero image, matching the 12px radius of the
- * feature cards below it. The glow sits behind the image and is unaffected. */
+/* The halo extends past the image on purpose; make sure it can never widen
+ * the page into a horizontal scrollbar when the image sits near the edge. */
+.VPHome {
+  overflow-x: clip;
+}
+
+.VPHero .image-bg {
+  /* larger than the image so the blurred gradient peeks out as a halo */
+  top: -10%;
+  right: -8%;
+  bottom: -10%;
+  left: -8%;
+  width: auto;
+  height: auto;
+  transform: none;
+}
+
+.VPHero .image-container {
+  position: relative;
+  width: 100%;
+  max-width: var(--hero-image-max-width);
+  height: auto;
+  margin: 0 auto;
+  padding: 0;
+  transform: none;
+}
+
 .VPHero .image-src {
+  /* relative (not static) so the image stacks above the absolutely positioned
+     glow; reset the default theme's top/left: 50%, which relative would honor */
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: none;
+  transform: none;
   border-radius: 12px;
+  box-shadow: var(--vp-shadow-3);
+}
+
+@media (min-width: 960px) {
+  :root {
+    --hero-image-max-width: 450px;
+    --vp-home-hero-image-filter: blur(60px);
+  }
+
+  .VPHero .image {
+    margin: 0;
+  }
+}
+
+/* The full project name is wider than the sidebar, so at desktop widths it
+ * spilled past the sidebar border into the page content. A slightly wider
+ * sidebar (VitePress default: 272px) plus a slightly smaller title lets the
+ * full name fit within the sidebar column; the ellipsis is only a hard stop
+ * in case a platform renders the font wider. */
+:root {
+  --vp-sidebar-width: 300px;
+}
+
+.VPNavBarTitle.has-sidebar .title {
+  font-size: 13px;
+}
+
+.VPNavBarTitle.has-sidebar .title > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Between 768px and 959px the full nav menu is already shown, and together
+ * with the search box the long project name overflows the navbar into a
+ * horizontal scrollbar. Show only the logo in that band. */
+@media (min-width: 768px) and (max-width: 959px) {
+  .VPNavBarTitle .title > span {
+    display: none;
+  }
 }
 
 /* Feature-card icons are emoji - give them a little more presence. */
