@@ -66,12 +66,17 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      # The version override reads a repository variable of the calling
+      # repository. Leave it unset to install the latest SF CLI; populate it
+      # to pin a version without touching any workflow file.
       - name: Install SF CLI
         uses: svierk/sfdx-cli-setup@main
+        with:
+          version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Salesforce Org Login
         uses: svierk/sfdx-login@main

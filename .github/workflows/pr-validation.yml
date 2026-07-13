@@ -60,15 +60,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      # Both version overrides below read repository variables of the calling
+      # repository. Leave them unset for the defaults (engines.node from
+      # package.json / latest SF CLI); populate them to pin a version without
+      # touching any workflow file.
       - name: Select Node Version
         uses: svierk/get-node-version@main
+        with:
+          node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
       - name: Install SF CLI
         uses: svierk/sfdx-cli-setup@main
+        with:
+          version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Salesforce Org Login
         uses: svierk/sfdx-login@main

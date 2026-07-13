@@ -35,8 +35,13 @@ jobs:
         with:
           fetch-depth: 0 # required for the "last updated" timestamps
 
+      # NODE_VERSION_OVERRIDE is a repository variable; unset it to fall back
+      # to engines.node from package.json, populate it to pin a version
+      # without touching this workflow file.
       - name: Select Node Version
         uses: svierk/get-node-version@main
+        with:
+          node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
       - name: Install Dependencies
         run: npm ci
