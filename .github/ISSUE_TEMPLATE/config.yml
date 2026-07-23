@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Actions Catalog
+    url: https://svierk.github.io/salesforce-devops-starter-kit/
+    about: Browse the building-block and reusable-workflow catalog before filing an issue.
+  - name: 🧱 Building block repositories
+    url: https://github.com/svierk/salesforce-devops-starter-kit#-building-blocks
+    about: A bug or feature for a single action belongs in that action's own repository.

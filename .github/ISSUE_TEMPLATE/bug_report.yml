@@ -1,0 +1,70 @@
+name: 🐞 Bug report
+description: Report a problem with a reusable workflow, example or the documentation.
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to file a bug report! Please fill out the sections below so we can reproduce and fix the issue. For a bug in a single building block, please open the issue in that action's own repository instead.
+  - type: input
+    id: area
+    attributes:
+      label: Affected workflow or area
+      description: Which reusable workflow, example or part of the tooling is affected?
+      placeholder: e.g. pr-validation.yml, deployment.yml, docs site
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce the behavior?
+      placeholder: |
+        1. Call the workflow with inputs '...'
+        2. Run on event '...'
+        3. See error in step '...'
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant workflow run output
+      description: Paste the failing step's log output (redact any secrets). Automatically formatted, no backticks needed.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Where does this happen?
+      placeholder: |
+        - Runner: ubuntu-latest
+        - SF CLI version: latest / pinned to x.y.z
+        - Auth flow: JWT / SFDX Auth URL
+        - Org type: Scratch / Sandbox / Production
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am using the latest state of the `main` branch.
+          required: false
