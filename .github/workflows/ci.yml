@@ -1,0 +1,43 @@
+name: Validation
+
+# Validates changes to this repository: checks formatting with Prettier and
+# builds the VitePress documentation site (which also runs the docs generator,
+# so a broken generator or malformed workflow YAML fails here before merge).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least-privilege token: this workflow only reads the repository.
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0 # required for the docs "last updated" timestamps
+
+      # NODE_VERSION_OVERRIDE is a repository variable; unset it to fall back
+      # to engines.node from package.json, populate it to pin a version
+      # without touching this workflow file.
+      - name: Select Node Version
+        uses: svierk/get-node-version@main
+        with:
+          node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Check Formatting
+        run: npm run prettier:verify
+
+      - name: Build Docs
+        run: npm run docs:build

@@ -64,7 +64,8 @@ function extractHeaderComment(raw) {
     const line = lines[i].trim();
     if (line === '' && out.length === 0) continue; // allow the blank line after name:
     if (line.startsWith('#')) out.push(line.replace(/^#\s?/, ''));
-    else if (out.length) break; // stop at the first non-comment once the block started
+    else if (out.length)
+      break; // stop at the first non-comment once the block started
     else if (line !== '') break;
   }
   return out.join(' ').replace(/\s+/g, ' ').trim();
@@ -332,7 +333,9 @@ async function main() {
   const sidebar = buildSidebar(workflowMeta, blockMeta);
   writeGenerated(sidebar, workflowMeta, blockMeta);
   writeIndex(blockMeta);
-  console.log(`[docs] generated ${workflowMeta.length} workflow pages and ${Object.keys(blockMeta).length} building-block pages`);
+  console.log(
+    `[docs] generated ${workflowMeta.length} workflow pages and ${Object.keys(blockMeta).length} building-block pages`
+  );
 }
 
 main().catch((err) => {

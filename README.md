@@ -21,18 +21,18 @@ The full **[documentation site](https://svierk.github.io/salesforce-devops-start
 
 Each building block lives in its own repository so it can be versioned and consumed independently.
 
-| Action | Purpose |
-| ------ | ------- |
-| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version) | Resolve and set up the Node.js version from `package.json` |
-| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup) | Install the Salesforce CLI and related plugins |
-| [🔐 sfdx-login](https://github.com/svierk/sfdx-login) | Authenticate to an org via SFDX Auth URL or JWT |
-| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org) | Create a scratch org (outputs `username` / `org-id`) |
-| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org) | Delete a scratch org (cleanup) |
-| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy) | Deploy metadata, with delta and validation-only (dry-run) modes |
-| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests) | Run Apex, LWC (Jest) and Flow tests with coverage reporting |
-| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review) | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint |
-| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org |
-| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import) | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON) |
+| Action                                                                              | Purpose                                                            |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version)                   | Resolve and set up the Node.js version from `package.json`         |
+| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup)                       | Install the Salesforce CLI and related plugins                     |
+| [🔐 sfdx-login](https://github.com/svierk/sfdx-login)                               | Authenticate to an org via SFDX Auth URL or JWT                    |
+| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org)     | Create a scratch org (outputs `username` / `org-id`)               |
+| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org)     | Delete a scratch org (cleanup)                                     |
+| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy)                             | Deploy metadata, with delta and validation-only (dry-run) modes    |
+| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests)                       | Run Apex, LWC (Jest) and Flow tests with coverage reporting        |
+| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review)                   | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint |
+| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org                |
+| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import)                   | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)       |
 
 ## 🏗️ Architecture
 
@@ -130,12 +130,12 @@ jobs:
 
 For common scenarios you don't have to wire the blocks together yourself - call one of the maintained [reusable workflows](.github/workflows) instead:
 
-| Workflow | Purpose |
-| -------- | ------- |
-| [pr-validation.yml](.github/workflows/pr-validation.yml) | Validate a pull request: static analysis + check-only (delta) deployment with tests |
+| Workflow                                                           | Purpose                                                                                                     |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| [pr-validation.yml](.github/workflows/pr-validation.yml)           | Validate a pull request: static analysis + check-only (delta) deployment with tests                         |
 | [create-scratch-org.yml](.github/workflows/create-scratch-org.yml) | Self-service scratch org provisioning: create → install packages → deploy → import data → generate password |
-| [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml) | Full scratch org lifecycle for CI: create → deploy → test → delete |
-| [deployment.yml](.github/workflows/deployment.yml) | Deploy metadata to a sandbox or production org |
+| [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml)         | Full scratch org lifecycle for CI: create → deploy → test → delete                                          |
+| [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata to a sandbox or production org                                                              |
 
 Call one from your own repository like this:
 

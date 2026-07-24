@@ -16,9 +16,12 @@
     "docs:generate": "node scripts/docs/generate.mjs",
     "docs:dev": "npm run docs:generate && vitepress dev docs",
     "docs:build": "npm run docs:generate && vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "prettier": "prettier --write \"**/*.{js,mjs,json,md,yml,yaml}\"",
+    "prettier:verify": "prettier --list-different \"**/*.{js,mjs,json,md,yml,yaml}\""
   },
   "devDependencies": {
+    "prettier": "^3.8.3",
     "vitepress": "^1.6.4",
     "yaml": "^2.6.1"
   }
