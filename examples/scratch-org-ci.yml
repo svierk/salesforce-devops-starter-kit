@@ -9,9 +9,15 @@ on:
   pull_request:
     branches: [main]
 
+# Least-privilege token: the called workflow only reads the repository and talks
+# to Salesforce. A reusable workflow can never get more permissions than the
+# caller grants here.
+permissions:
+  contents: read
+
 jobs:
   scratch-org-ci:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.0.0
     with:
       source-dir: force-app
       definition-file: config/project-scratch-def.json

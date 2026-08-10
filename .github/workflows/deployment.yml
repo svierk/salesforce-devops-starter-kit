@@ -66,20 +66,21 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false # the GITHUB_TOKEN is not needed after the checkout - don't leave it in .git/config
 
       # The version override reads a repository variable of the calling
       # repository. Leave it unset to install the latest SF CLI; populate it
       # to pin a version without touching any workflow file.
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@main
+        uses: svierk/sfdx-cli-setup@v1.1.2
         with:
           version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@main
+        uses: svierk/sfdx-login@v1.4.2
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -87,7 +88,7 @@ jobs:
           alias: ${{ inputs.target-org-alias }}
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@main
+        uses: svierk/sfdx-deploy@v1.2.1
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           delta: ${{ inputs.delta }}

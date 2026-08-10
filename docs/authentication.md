@@ -28,7 +28,7 @@ Best for production and long-lived sandbox connections, as it does not rely on a
 
    ```yaml
    - name: Salesforce Org Login
-     uses: svierk/sfdx-login@main
+     uses: svierk/sfdx-login@v1.4.2
      with:
        client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
        jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -65,7 +65,7 @@ Best for getting started and for throwaway scratch org / sandbox flows. Note tha
 
    ```yaml
    - name: Salesforce Org Login
-     uses: svierk/sfdx-login@main
+     uses: svierk/sfdx-login@v1.4.2
      with:
        sfdx-url: ${{ secrets.SFDX_AUTH_URL }}
        alias: my-org

@@ -60,26 +60,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false # the GITHUB_TOKEN is not needed after the checkout - don't leave it in .git/config
 
       # Both version overrides below read repository variables of the calling
       # repository. Leave them unset for the defaults (engines.node from
       # package.json / latest SF CLI); populate them to pin a version without
       # touching any workflow file.
       - name: Select Node Version
-        uses: svierk/get-node-version@main
+        uses: svierk/get-node-version@v1.5.1
         with:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@main
+        uses: svierk/sfdx-cli-setup@v1.1.2
         with:
           version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@main
+        uses: svierk/sfdx-login@v1.4.2
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -89,7 +90,7 @@ jobs:
       - name: Code Review
         if: ${{ inputs.run-code-review }}
         continue-on-error: true
-        uses: svierk/sfdx-code-review@main
+        uses: svierk/sfdx-code-review@v1.0.0
         with:
           code-analyzer: true
           workspace: ${{ inputs.source-dir }}
@@ -103,7 +104,7 @@ jobs:
           sarif_file: results.sarif
 
       - name: Validate Deployment (dry-run)
-        uses: svierk/sfdx-deploy@main
+        uses: svierk/sfdx-deploy@v1.2.1
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           delta: ${{ inputs.delta }}

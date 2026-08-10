@@ -27,9 +27,15 @@ on:
   pull_request:
     branches: [main]
 
+# A reusable workflow can never get more permissions than the caller grants -
+# pr-validation needs security-events: write to upload its SARIF report.
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
     with:
       source-dir: force-app
     secrets:
@@ -51,21 +57,27 @@ on:
   pull_request:
     branches: [main]
 
+# Least-privilege token: this pipeline only reads the repository. Add
+# security-events: write if you upload the code analysis results as SARIF.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config for later steps
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@main
+        uses: svierk/sfdx-cli-setup@v1.1.2
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@main
+        uses: svierk/sfdx-login@v1.4.2
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -73,13 +85,13 @@ jobs:
           alias: ci
 
       - name: Code Review
-        uses: svierk/sfdx-code-review@main
+        uses: svierk/sfdx-code-review@v1.0.0
         with:
           workspace: force-app
           severity-threshold: 3
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@main
+        uses: svierk/sfdx-deploy@v1.2.1
         with:
           delta: true
           delta-from: origin/${{ github.base_ref }}
@@ -93,7 +105,7 @@ jobs:
 - Add the **scratch org CI** workflow to run tests in a clean org on every change.
 - Add the **create scratch org** workflow so team members can provision ready-to-use orgs on demand (self-service, no local CLI needed).
 - Add a **deployment** workflow gated by a GitHub Environment for production.
-- **Pin** the actions to released versions and enable Dependabot (see the [versioning recommendation](../README.md#️-versioning-recommendation)).
+- Keep the version pins current with **Dependabot** and review the hardening checklist (see [security & versioning](../README.md#-security--versioning)).
 
 ## Building block reference
 

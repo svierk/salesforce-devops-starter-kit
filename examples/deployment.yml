@@ -8,9 +8,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Least-privilege token: the called workflow only reads the repository and talks
+# to Salesforce. A reusable workflow can never get more permissions than the
+# caller grants here.
+permissions:
+  contents: read
+
 jobs:
   deploy:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.0.0
     with:
       source-dir: force-app
       target-org-alias: production

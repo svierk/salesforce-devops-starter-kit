@@ -30,9 +30,15 @@ on:
         type: boolean
         default: true
 
+# Least-privilege token: the called workflow only reads the repository and talks
+# to Salesforce. A reusable workflow can never get more permissions than the
+# caller grants here.
+permissions:
+  contents: read
+
 jobs:
   create-scratch-org:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@v1.0.0
     with:
       org-name: ${{ inputs.org-name }}
       description: ${{ inputs.description }}

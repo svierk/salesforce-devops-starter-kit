@@ -54,24 +54,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false # the GITHUB_TOKEN is not needed after the checkout - don't leave it in .git/config
 
       # Both version overrides below read repository variables of the calling
       # repository. Leave them unset for the defaults (engines.node from
       # package.json / latest SF CLI); populate them to pin a version without
       # touching any workflow file.
       - name: Select Node Version
-        uses: svierk/get-node-version@main
+        uses: svierk/get-node-version@v1.5.1
         with:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@main
+        uses: svierk/sfdx-cli-setup@v1.1.2
         with:
           version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Authorize Dev Hub
-        uses: svierk/sfdx-login@main
+        uses: svierk/sfdx-login@v1.4.2
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -81,7 +83,7 @@ jobs:
 
       - name: Create Scratch Org
         id: scratch
-        uses: svierk/sfdx-create-scratch-org@main
+        uses: svierk/sfdx-create-scratch-org@v1.3.1
         with:
           target-dev-hub: devhub
           definition-file: ${{ inputs.definition-file }}
@@ -91,7 +93,7 @@ jobs:
 
       - name: Install Dependency Packages
         if: ${{ inputs.packages != '' }}
-        uses: svierk/sfdx-package-installation@main
+        uses: svierk/sfdx-package-installation@v1.2.1
         with:
           packages: ${{ inputs.packages }}
           target-org: ${{ steps.scratch.outputs.username }}
@@ -99,14 +101,14 @@ jobs:
           publish-wait: 20
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@main
+        uses: svierk/sfdx-deploy@v1.2.1
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ steps.scratch.outputs.username }}
           destructive-changes: false # fresh scratch org: additive deploy, nothing to delete
 
       - name: Run Tests
-        uses: svierk/sfdx-run-tests@main
+        uses: svierk/sfdx-run-tests@v1.1.0
         with:
           apex: true
           target-org: ${{ steps.scratch.outputs.username }}
@@ -115,13 +117,13 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: apex-test-results
           path: ./tests/apex
 
       - name: Delete Scratch Org
         if: always()
-        uses: svierk/sfdx-delete-scratch-org@main
+        uses: svierk/sfdx-delete-scratch-org@v1.1.2
         with:
           target-org: ${{ steps.scratch.outputs.username }}

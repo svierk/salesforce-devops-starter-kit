@@ -3,13 +3,24 @@
 
 name: PR Validation
 
+# Keep this on `pull_request`. Never switch it to `pull_request_target`: that
+# event runs with the base repository's secrets, so a pull request from a fork
+# could execute its own code against your Salesforce org.
 on:
   pull_request:
     branches: [main]
 
+# Least-privilege token: read the repository, plus write the code analysis
+# results back as a SARIF report. A reusable workflow can never get more
+# permissions than the caller grants here, so security-events: write has to be
+# granted in this file as well.
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
     with:
       source-dir: force-app
       test-level: RunLocalTests

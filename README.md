@@ -96,21 +96,26 @@ on:
   pull_request:
     branches: [main]
 
+# Least-privilege token: this pipeline only reads the repository.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # full history so sfdx-deploy can derive delta/destructive changes
+          persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config for later steps
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@main
+        uses: svierk/sfdx-cli-setup@v1.1.2
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@main
+        uses: svierk/sfdx-login@v1.4.2
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -118,7 +123,7 @@ jobs:
           alias: ci
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@main
+        uses: svierk/sfdx-deploy@v1.2.1
         with:
           source-dir: force-app
           target-org: ci
@@ -140,9 +145,15 @@ For common scenarios you don't have to wire the blocks together yourself - call 
 Call one from your own repository like this:
 
 ```yaml
+# A reusable workflow can never get more permissions than the caller grants -
+# pr-validation additionally needs security-events: write to upload its SARIF report.
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   pr-validation:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@main
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
     with:
       source-dir: force-app
     secrets:
@@ -161,17 +172,25 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 - [docs/getting-started.md](docs/getting-started.md) - set up your first pipeline end to end
 - [docs/authentication.md](docs/authentication.md) - configure SFDX Auth URL and JWT authentication
 
-## 🏷️ Versioning recommendation
+## 🔐 Security & versioning
 
-The examples in this kit reference the actions with `@main` for readability. In real pipelines this is also a **supply-chain risk**: a mutable ref runs whatever code is on that branch at run time - with access to your secrets - so a compromised or rewritten `@main` (of any action, including third-party ones like `actions/checkout`) would run unnoticed.
+Every `uses:` reference in this repository - in the [reusable workflows](.github/workflows), in the [examples](examples) and in the snippets above - is **pinned to an exact release version**, e.g. `svierk/sfdx-deploy@v1.2.1`. Do the same in your own pipelines:
 
-For production pipelines, **pin every action**:
+- **Never reference a mutable ref** such as `@main` or `@v1`. It runs whatever code sits on that branch/tag at run time - with access to your org credentials - so a compromised or rewritten ref would run unnoticed.
+- **Good - pin to an exact release tag** (`@v1.2.1`). Readable, concrete, and bumped through reviewed pull requests. This is what the kit itself uses.
+- **Strictest - pin to a full-length commit SHA** (`@a1b2c3d…`) with the version as a trailing comment. A SHA can never be re-pointed by the publisher; the cost is readability. Worth it for actions from publishers you don't control.
+- **Enable [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot) for `github-actions`** so those pins are bumped for you instead of silently ageing - see [.github/dependabot.yml](.github/dependabot.yml) for the setup used here (one grouped pull request per ecosystem, merged automatically once the required checks pass).
 
-- **Best - pin to a full-length commit SHA**, e.g. `svierk/sfdx-deploy@a1b2c3d…`. A SHA is immutable, so the code can never change under you. Tags (`@v1`) are convenient but can be re-pointed by the maintainer.
-- **Good - pin to a released tag** (e.g. `svierk/sfdx-deploy@v1`) if you trust the publisher and prefer readability over immutability.
-- Enable [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot) for `github-actions` so pinned SHAs/tags are bumped via reviewed pull requests instead of drifting silently.
+This applies to **all** actions your workflows reference - the building blocks of this kit as well as `actions/*` and any other third-party action.
 
-This applies to **all** actions your workflows reference - the building blocks in this kit as well as `actions/*` and any other third-party action.
+Beyond pinning, the workflows in this kit follow a few rules that are worth copying:
+
+- **Least-privilege `GITHUB_TOKEN`** - every workflow declares a `permissions:` block granting only what it needs (`contents: read` in most cases). Remember that a reusable workflow can never receive more than the caller grants, so the PR validation needs `security-events: write` in the calling workflow as well.
+- **`persist-credentials: false` on checkout** - the token is not written to `.git/config`, so later steps (SF CLI, third-party actions) cannot reuse it.
+- **Secrets travel as secrets** - pass them via the `secrets:` block of a reusable workflow or directly into an action input, and reference them in shell steps as **environment variables** (`"$TARGET_ORG"`), never by interpolating `${{ ... }}` into the script itself - that would allow command injection and can leak values into the log.
+- **Validate pull requests with `pull_request`, never `pull_request_target`** - the latter runs with the base repository's secrets, which would let a fork execute its own code against your org.
+- **Mask generated credentials** - values created at run time (e.g. a scratch org password) are masked with `::add-mask::` before they can reach the log.
+- **Gate production behind a [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)** - the deployment workflow takes an `environment` input for required reviewers and environment-scoped secrets.
 
 ## 🤝 Contributing
 

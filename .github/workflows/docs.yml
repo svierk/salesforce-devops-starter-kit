@@ -16,6 +16,9 @@ on:
       - 'package-lock.json'
   workflow_dispatch:
 
+# No permissions by default; each job below grants only what it needs.
+permissions: {}
+
 # Allow only one concurrent Pages deployment, without cancelling in-progress runs.
 concurrency:
   group: pages
@@ -29,15 +32,16 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0 # required for the "last updated" timestamps
+          persist-credentials: false # the GITHUB_TOKEN is not needed after the checkout - don't leave it in .git/config
 
       # NODE_VERSION_OVERRIDE is a repository variable; unset it to fall back
       # to engines.node from package.json, populate it to pin a version
       # without touching this workflow file.
       - name: Select Node Version
-        uses: svierk/get-node-version@main
+        uses: svierk/get-node-version@v1.5.1
         with:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
@@ -48,7 +52,7 @@ jobs:
         run: npm run docs:build
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@main
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: docs/.vitepress/dist
 
@@ -65,4 +69,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@main
+        uses: actions/deploy-pages@v5.0.0
