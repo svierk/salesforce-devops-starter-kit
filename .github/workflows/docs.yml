@@ -16,10 +16,6 @@ on:
       - 'package-lock.json'
   workflow_dispatch:
 
-# Least-privilege by default; the deploy job widens it to what Pages needs.
-permissions:
-  contents: read
-
 # Allow only one concurrent Pages deployment, without cancelling in-progress runs.
 concurrency:
   group: pages
@@ -29,6 +25,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@main
