@@ -1,5 +1,8 @@
 # ☁️ Salesforce DevOps Starter Kit
 
+[![Validation](https://github.com/svierk/salesforce-devops-starter-kit/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/svierk/salesforce-devops-starter-kit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/svierk/salesforce-devops-starter-kit?sort=semver)](https://github.com/svierk/salesforce-devops-starter-kit/releases/latest)
+
 <img src="./images/salesforce-devops-starter-kit.png" alt="salesforce-devops-starter-kit" width="900"/>
 
 An open source starter kit for the Trailblazer Community that makes it easy to build flexible CI/CD pipelines for Salesforce projects with **GitHub Actions**.
