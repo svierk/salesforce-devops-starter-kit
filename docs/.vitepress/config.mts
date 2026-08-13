@@ -26,6 +26,20 @@ export default defineConfig({
     // GitHub, but 404 on the site. Rewrite those to absolute GitHub URLs so they
     // resolve either way.
     config: (md) => {
+      // Vue also interpolates `{{ ... }}` inside inline code spans. VitePress
+      // marks fenced blocks `v-pre`, but not code spans - so a README that
+      // mentions `${{ secrets.* }}` in prose fails the build with
+      // "Error parsing JavaScript expression". The building-block pages are
+      // fetched verbatim from the Action repositories, where such prose appears
+      // and changes without a commit here, so mark every code span v-pre.
+      const defaultCodeInline =
+        md.renderer.rules.code_inline ||
+        ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+      md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
+        tokens[idx].attrSet('v-pre', '');
+        return defaultCodeInline(tokens, idx, options, env, self);
+      };
+
       const repoBlob = 'https://github.com/svierk/salesforce-devops-starter-kit/blob/main/';
       const defaultRender =
         md.renderer.rules.link_open ||
