@@ -197,7 +197,6 @@ function summarize(markdown, fallback) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Fetch a README, retrying transient failures (rate limits, 5xx). */
 /** Shorten text to at most `max` chars, cutting on a word boundary + ellipsis. */
 function truncate(text, max) {
   if (!text || text.length <= max) return text ?? '';
@@ -206,6 +205,7 @@ function truncate(text, max) {
   return `${clipped.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
 }
 
+/** Fetch a README, retrying transient failures (rate limits, 5xx). */
 async function fetchReadme(repo, attempts = 4) {
   let lastError;
   for (let i = 0; i < attempts; i++) {
@@ -222,9 +222,17 @@ async function fetchReadme(repo, attempts = 4) {
   throw lastError;
 }
 
-/** Build one page per building block from its (fetched) README. */
+/** Build one page per building block from its (fetched) README.
+ *
+ * A README that cannot be fetched degrades to a stub page. That is acceptable
+ * while writing docs offline, but not in CI: the Docs workflow also runs on a
+ * weekly schedule and deploys straight to Pages, so a silently stubbed page
+ * would go live unnoticed. Under `CI` the failures are therefore collected and
+ * rethrown once the loop is done - one run reports every broken block, not just
+ * the first one. */
 async function writeBlockPages() {
   const meta = {};
+  const failures = [];
   for (const category of config.blockCategories) {
     for (const block of category.blocks) {
       const { repo, icon } = block;
@@ -232,6 +240,7 @@ async function writeBlockPages() {
       try {
         markdown = await fetchReadme(repo);
       } catch (err) {
+        failures.push(`${repo} (${err.message})`);
         console.warn(`[docs] could not fetch README for ${repo} (${err.message}); writing a stub`);
         markdown = `# ${repo}\n\nDocumentation for this building block lives in its repository.\n`;
       }
@@ -244,6 +253,12 @@ async function writeBlockPages() {
       const cardText = block.tagline ?? truncate(description, 130);
       meta[repo] = { title, description, icon, cardText };
     }
+  }
+  if (failures.length && process.env.CI) {
+    throw new Error(
+      `could not fetch the README of ${failures.length} building block(s): ${failures.join(', ')}. ` +
+        'Refusing to publish stub pages - re-run the workflow once the source repositories are reachable.'
+    );
   }
   return meta;
 }

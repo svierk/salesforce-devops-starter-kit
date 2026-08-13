@@ -3,6 +3,11 @@ name: Docs
 # Builds the VitePress documentation site and deploys it to GitHub Pages.
 # The site is regenerated from the repository content (workflows, examples and
 # the building-block READMEs) by scripts/docs/generate.mjs on every build.
+#
+# Runs on every relevant push to `main` plus a weekly schedule: the building-block
+# pages are fetched from the Action repositories at build time, so a README that
+# changes over there would otherwise only reach the site on the next unrelated
+# commit here.
 
 on:
   push:
@@ -14,6 +19,10 @@ on:
       - 'scripts/docs/**'
       - 'package.json'
       - 'package-lock.json'
+  schedule:
+    # Weekly rebuild (Mondays 05:00 UTC) to pull the current building-block
+    # READMEs from svierk/<action> without needing a commit in this repository.
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 # No permissions by default; each job below grants only what it needs.
