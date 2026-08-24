@@ -75,12 +75,12 @@ jobs:
       # repository. Leave it unset to install the latest SF CLI; populate it
       # to pin a version without touching any workflow file.
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@v1.1.2
+        uses: svierk/sfdx-cli-setup@v1.1.3
         with:
           version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@v1.4.2
+        uses: svierk/sfdx-login@v1.4.3
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -88,7 +88,7 @@ jobs:
           alias: ${{ inputs.target-org-alias }}
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@v1.2.1
+        uses: svierk/sfdx-deploy@v1.2.2
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           delta: ${{ inputs.delta }}
