@@ -6,16 +6,33 @@ import { defineConfig } from 'vitepress';
 // package.json "docs:*" scripts).
 const { sidebar, nav } = JSON.parse(readFileSync(new URL('./generated.json', import.meta.url), 'utf-8'));
 
+const title = 'Salesforce DevOps Starter Kit';
+const description = 'GitHub-native CI/CD building blocks and reusable workflows for Salesforce projects.';
+const siteUrl = 'https://svierk.github.io/salesforce-devops-starter-kit/';
+const favicon = '/salesforce-devops-starter-kit/images/salesforce-devops-starter-kit-hero-logo.png';
+
 export default defineConfig({
-  title: 'Salesforce DevOps Starter Kit',
-  description: 'GitHub-native CI/CD building blocks and reusable workflows for Salesforce projects.',
+  title,
+  description,
   lang: 'en-US',
   base: '/salesforce-devops-starter-kit/',
   cleanUrls: true,
   lastUpdated: true,
   // Favicon - head link hrefs are not base-adjusted, so include the base prefix.
+  // The Open Graph tags reuse the GitHub social preview image so shared links to
+  // the docs look the same as shared links to the repository.
   head: [
-    ['link', { rel: 'icon', type: 'image/png', href: '/salesforce-devops-starter-kit/images/salesforce-devops-starter-kit-hero-logo.png' }]
+    ['link', { rel: 'icon', type: 'image/png', href: favicon }],
+    ['link', { rel: 'apple-touch-icon', href: favicon }],
+    ['meta', { name: 'theme-color', content: '#1d4ed8' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:url', content: siteUrl }],
+    ['meta', { property: 'og:title', content: title }],
+    ['meta', { property: 'og:description', content: description }],
+    ['meta', { property: 'og:image', content: `${siteUrl}images/salesforce-devops-starter-kit-social-preview.jpg` }],
+    ['meta', { property: 'og:image:width', content: '1280' }],
+    ['meta', { property: 'og:image:height', content: '640' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }]
   ],
   // Belt-and-suspenders: the markdown hook below turns repo-relative links into
   // absolute GitHub URLs, but keep the check lenient for anything that slips by.

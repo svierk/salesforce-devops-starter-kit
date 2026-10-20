@@ -3,32 +3,53 @@
  * Only overrides VitePress design tokens - no structural CSS.
  */
 :root {
-  --vp-c-brand-1: #0d6efd;
-  --vp-c-brand-2: #0b5ed7;
-  --vp-c-brand-3: #0a58ca;
-  --vp-c-brand-soft: rgba(13, 110, 253, 0.14);
+  /* Palette taken from the artwork: royal-blue bricks, violet blocks and the
+   * cyan "DevOps" glow on a deep night-blue sky. */
+  --vp-c-brand-1: #1d4ed8;
+  --vp-c-brand-2: #1a45c4;
+  --vp-c-brand-3: #163cae;
+  --vp-c-brand-soft: rgba(29, 78, 216, 0.14);
 
-  /* Hero name gradient (Salesforce blue → cloud cyan). */
+  /* Primary button in the royal blue of the bricks (default: brand-3). */
+  --vp-button-brand-bg: #1d4ed8;
+  --vp-button-brand-hover-bg: #2b5cf0;
+  --vp-button-brand-active-bg: #163cae;
+
+  /* Hero name gradient (violet brick → royal blue → glowing cyan). */
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #0d6efd 30%, #17c0eb);
+  --vp-home-hero-name-background: linear-gradient(120deg, #5b21d6, #1d4ed8 40%, #00b8f0);
 
   --hero-image-max-width: 370px;
-  --vp-home-hero-image-background-image: linear-gradient(120deg, rgba(13, 110, 253, 0.55), rgba(23, 192, 235, 0.55));
+  --vp-home-hero-image-background-image: linear-gradient(
+    120deg,
+    rgba(29, 78, 216, 0.55),
+    rgba(91, 33, 214, 0.45),
+    rgba(0, 200, 248, 0.55)
+  );
   --vp-home-hero-image-filter: blur(48px);
 }
 
 .dark {
-  --vp-c-brand-1: #4d9bff;
-  --vp-c-brand-2: #6cadff;
-  --vp-c-brand-3: #86bcff;
-  --vp-c-brand-soft: rgba(77, 155, 255, 0.16);
+  /* Night-blue surfaces instead of the neutral default grays, matching the
+   * dusk sky of the hero artwork. */
+  --vp-c-bg: #0b1120;
+  --vp-c-bg-alt: #070b16;
+  --vp-c-bg-elv: #111a2e;
+  --vp-c-bg-soft: #131d33;
+
+  --vp-c-brand-1: #6b9bff;
+  --vp-c-brand-2: #8cb2ff;
+  --vp-c-brand-3: #a9c5ff;
+  --vp-c-brand-soft: rgba(107, 155, 255, 0.16);
+
+  --vp-home-hero-name-background: linear-gradient(120deg, #8b5cf6, #4d7cff 40%, #00c8f8);
 
   /* The light-blue dark-mode brand colors are right for links, but as a solid
    * button fill they leave too little contrast against the white label. Use a
    * darker blue for the primary button only. */
-  --vp-button-brand-bg: #1f6feb;
-  --vp-button-brand-hover-bg: #388bfd;
-  --vp-button-brand-active-bg: #1158c7;
+  --vp-button-brand-bg: #1d4ed8;
+  --vp-button-brand-hover-bg: #2b5cf0;
+  --vp-button-brand-active-bg: #163cae;
   --vp-button-brand-border: transparent;
   --vp-button-brand-hover-border: transparent;
   --vp-button-brand-active-border: transparent;
@@ -37,7 +58,12 @@
   --vp-button-brand-active-text: #ffffff;
 
   /* On dark backgrounds the hero glow needs more opacity to shine through. */
-  --vp-home-hero-image-background-image: linear-gradient(120deg, rgba(13, 110, 253, 0.8), rgba(23, 192, 235, 0.8));
+  --vp-home-hero-image-background-image: linear-gradient(
+    120deg,
+    rgba(29, 78, 216, 0.85),
+    rgba(91, 33, 214, 0.7),
+    rgba(0, 200, 248, 0.8)
+  );
 }
 
 /**

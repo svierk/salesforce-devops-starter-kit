@@ -3,7 +3,7 @@
 [![Validation](https://github.com/svierk/salesforce-devops-starter-kit/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/svierk/salesforce-devops-starter-kit/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/svierk/salesforce-devops-starter-kit?sort=semver)](https://github.com/svierk/salesforce-devops-starter-kit/releases/latest)
 
-<img src="./images/salesforce-devops-starter-kit.png" alt="salesforce-devops-starter-kit" width="900"/>
+<img src="./images/salesforce-devops-starter-kit.png" alt="Salesforce DevOps Starter Kit - composable CI/CD with GitHub Actions" width="900"/>
 
 An open source starter kit for the Trailblazer Community that makes it easy to build flexible CI/CD pipelines for Salesforce projects with **GitHub Actions**.
 
@@ -11,7 +11,7 @@ The kit is built around a set of small, focused [GitHub Actions](#-building-bloc
 
 The full **[documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** is an auto-generated catalog of every building block and reusable workflow - each with its complete input/secret reference and copy-paste examples.
 
-<a href="https://svierk.github.io/salesforce-devops-starter-kit/"><img src="https://img.shields.io/badge/Actions_Catalog-Explore_the_docs-0d6efd?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Explore the documentation" /></a>
+<a href="https://svierk.github.io/salesforce-devops-starter-kit/"><img src="https://img.shields.io/badge/Actions_Catalog-Explore_the_docs-1d4ed8?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Explore the documentation" /></a>
 
 ## 🧱 Philosophy
 
@@ -85,8 +85,8 @@ flowchart TD
         M --> AX3[apex-execute · post-deploy]
     end
 
-    classDef setup fill:#e3f2fd,stroke:#1565c0,color:#0d2b45;
-    classDef gate fill:#fff3e0,stroke:#e65100,color:#3e2600;
+    classDef setup fill:#e0e7ff,stroke:#1d4ed8,color:#0b1a4a;
+    classDef gate fill:#ffedd5,stroke:#d9650b,color:#3e2600;
     class A,B,C,D setup;
     class E gate;
 ```
