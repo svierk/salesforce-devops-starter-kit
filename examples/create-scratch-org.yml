@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   create-scratch-org:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@v1.1.0
     with:
       org-name: ${{ inputs.org-name }}
       description: ${{ inputs.description }}
@@ -48,13 +48,19 @@ jobs:
       deploy-metadata: true
       install-packages: ${{ inputs.install-packages }}
       # Dependency packages to install when "Install dependency packages?" is checked:
-      # packages: "['04t...']"
+      # packages: '04t...,04t...'
+      # Permissions granted to the admin user after the deployment, so the
+      # handed-over org (and the data import below) can use the deployed metadata:
+      # permission-sets: 'My_App_Admin,My_App_User'
+      # permission-set-groups: 'Sales_Manager'
       import-data: ${{ inputs.import-data }}
       # Sample data imported when "Import sample data?" is checked (CSV via Bulk API 2.0,
       # JSON via sObject Tree). Point these at files that exist in your repository:
       csv-file-path: ./data/accounts.csv
       csv-object-type: Account
       json-file-path: ./data/accounts.json,./data/contacts.json
+      # Anonymous Apex setup scripts executed last, in alphabetical order:
+      # apex-file-path: ./scripts/apex/setup/*.apex
     secrets:
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}

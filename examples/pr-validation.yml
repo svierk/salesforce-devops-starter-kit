@@ -20,10 +20,12 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
     with:
       source-dir: force-app
       test-level: RunLocalTests
+      # Run only a selection of Apex test classes instead (implies RunSpecifiedTests):
+      # apex-tests: AccountServiceTest,LeadServiceTest
       delta: true
       run-code-review: true
       severity-threshold: '3'

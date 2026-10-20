@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
     with:
       source-dir: force-app
     secrets:
@@ -74,10 +74,10 @@ jobs:
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config for later steps
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@v1.1.2
+        uses: svierk/sfdx-cli-setup@v1.2.0
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@v1.4.2
+        uses: svierk/sfdx-login@v1.4.3
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -85,13 +85,13 @@ jobs:
           alias: ci
 
       - name: Code Review
-        uses: svierk/sfdx-code-review@v1.0.0
+        uses: svierk/sfdx-code-review@v1.1.0
         with:
           workspace: force-app
           severity-threshold: 3
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@v1.2.1
+        uses: svierk/sfdx-deploy@v1.3.0
         with:
           delta: true
           delta-from: origin/${{ github.base_ref }}
@@ -105,6 +105,7 @@ jobs:
 - Add the **scratch org CI** workflow to run tests in a clean org on every change.
 - Add the **create scratch org** workflow so team members can provision ready-to-use orgs on demand (self-service, no local CLI needed).
 - Add a **deployment** workflow gated by a GitHub Environment for production.
+- Grant the deployed permission sets with **sfdx-assign-permissions** and automate post-deploy steps (data migrations, cache clearing) with **sfdx-apex-execute** - both are wired into the reusable workflows as optional inputs.
 - Keep the version pins current with **Dependabot** and review the hardening checklist (see [security & versioning](../README.md#-security--versioning)).
 
 ## Building block reference

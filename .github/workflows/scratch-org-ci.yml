@@ -2,7 +2,8 @@ name: Scratch Org CI
 
 # Reusable workflow that runs a full scratch org lifecycle: it authenticates to
 # the Dev Hub, creates a scratch org, optionally installs dependency packages,
-# deploys the source, runs Apex tests, and always deletes the scratch org again.
+# deploys the source, optionally assigns permissions and runs anonymous Apex
+# setup scripts, runs Apex tests, and always deletes the scratch org again.
 
 on:
   workflow_call:
@@ -23,12 +24,37 @@ on:
         type: string
         default: '1'
       test-level:
-        description: Apex test level for the test run.
+        description: Apex test level for the test run. Ignored when apex-tests is set.
         required: false
         type: string
         default: RunLocalTests
+      apex-tests:
+        description: Comma-separated or multi-line list of Apex tests to run as "Class" or "Class.method". A selection always runs with RunSpecifiedTests. Leave empty to run the test-level.
+        required: false
+        type: string
+        default: ''
       packages:
-        description: 'JSON array of dependency packages to install, e.g. "[''04t...'']". Leave empty to skip.'
+        description: Comma-separated or multi-line list of dependency packages (aliases or IDs) to install, e.g. "04t...,04t...". Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      permission-sets:
+        description: Comma-separated or multi-line list of permission sets to assign to the scratch org admin user before the tests run. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      permission-set-groups:
+        description: Comma-separated or multi-line list of permission set groups to assign to the scratch org admin user. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      permission-set-licenses:
+        description: Comma-separated or multi-line list of permission set licenses to assign to the scratch org admin user. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      apex-file-path:
+        description: Comma-separated anonymous Apex file(s) or glob(s) to execute before the tests, e.g. "./scripts/apex/setup/*.apex". Leave empty to skip.
         required: false
         type: string
         default: ''
@@ -68,7 +94,7 @@ jobs:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@v1.1.3
+        uses: svierk/sfdx-cli-setup@v1.2.0
         with:
           version: ${{ vars.SF_CLI_VERSION_OVERRIDE }}
 
@@ -93,7 +119,7 @@ jobs:
 
       - name: Install Dependency Packages
         if: ${{ inputs.packages != '' }}
-        uses: svierk/sfdx-package-installation@v1.2.2
+        uses: svierk/sfdx-package-installation@v1.3.0
         with:
           packages: ${{ inputs.packages }}
           target-org: ${{ steps.scratch.outputs.username }}
@@ -101,18 +127,35 @@ jobs:
           publish-wait: 20
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@v1.2.2
+        uses: svierk/sfdx-deploy@v1.3.0
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ steps.scratch.outputs.username }}
           destructive-changes: false # fresh scratch org: additive deploy, nothing to delete
 
+      - name: Assign Permissions
+        if: ${{ inputs.permission-sets != '' || inputs.permission-set-groups != '' || inputs.permission-set-licenses != '' }}
+        uses: svierk/sfdx-assign-permissions@v1.0.0
+        with:
+          permission-sets: ${{ inputs.permission-sets }}
+          permission-set-groups: ${{ inputs.permission-set-groups }}
+          permission-set-licenses: ${{ inputs.permission-set-licenses }}
+          target-org: ${{ steps.scratch.outputs.username }}
+
+      - name: Run Setup Scripts
+        if: ${{ inputs.apex-file-path != '' }}
+        uses: svierk/sfdx-apex-execute@v1.0.0
+        with:
+          file-path: ${{ inputs.apex-file-path }}
+          target-org: ${{ steps.scratch.outputs.username }}
+
       - name: Run Tests
-        uses: svierk/sfdx-run-tests@v1.1.1
+        uses: svierk/sfdx-run-tests@v1.2.0
         with:
           apex: true
           target-org: ${{ steps.scratch.outputs.username }}
           test-level: ${{ inputs.test-level }}
+          apex-tests: ${{ inputs.apex-tests }}
           apex-output-dir: ./tests/apex
 
       - name: Upload Test Results

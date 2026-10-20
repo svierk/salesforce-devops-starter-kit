@@ -83,6 +83,21 @@
           "tagline": "Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)."
         }
       ]
+    },
+    {
+      "text": "Post-Deploy",
+      "blocks": [
+        {
+          "repo": "sfdx-assign-permissions",
+          "icon": "🛡️",
+          "tagline": "Assign permission sets, groups and licenses to org users."
+        },
+        {
+          "repo": "sfdx-apex-execute",
+          "icon": "📜",
+          "tagline": "Run anonymous Apex for post-deploy scripts and data migrations."
+        }
+      ]
     }
   ]
 }

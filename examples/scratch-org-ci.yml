@@ -17,14 +17,19 @@ permissions:
 
 jobs:
   scratch-org-ci:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.1.0
     with:
       source-dir: force-app
       definition-file: config/project-scratch-def.json
       duration-days: '1'
       test-level: RunLocalTests
+      # Run only a selection of Apex tests instead (implies RunSpecifiedTests):
+      # apex-tests: AccountServiceTest,LeadServiceTest.testConversion
       # Optional dependency packages to install before deploying:
-      # packages: "['04t...']"
+      # packages: '04t...,04t...'
+      # Optional permissions and setup scripts applied before the tests run:
+      # permission-sets: 'My_App_Admin'
+      # apex-file-path: ./scripts/apex/setup/*.apex
     secrets:
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}

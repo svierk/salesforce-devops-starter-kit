@@ -24,18 +24,20 @@ The full **[documentation site](https://svierk.github.io/salesforce-devops-start
 
 Each building block lives in its own repository so it can be versioned and consumed independently.
 
-| Action                                                                              | Purpose                                                            |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version)                   | Resolve and set up the Node.js version from `package.json`         |
-| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup)                       | Install the Salesforce CLI and related plugins                     |
-| [🔐 sfdx-login](https://github.com/svierk/sfdx-login)                               | Authenticate to an org via SFDX Auth URL or JWT                    |
-| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org)     | Create a scratch org (outputs `username` / `org-id`)               |
-| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org)     | Delete a scratch org (cleanup)                                     |
-| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy)                             | Deploy metadata, with delta and validation-only (dry-run) modes    |
-| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests)                       | Run Apex, LWC (Jest) and Flow tests with coverage reporting        |
-| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review)                   | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint |
-| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org                |
-| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import)                   | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)       |
+| Action                                                                              | Purpose                                                             |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version)                   | Resolve and set up the Node.js version from `package.json`          |
+| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup)                       | Install the Salesforce CLI and related plugins                      |
+| [🔐 sfdx-login](https://github.com/svierk/sfdx-login)                               | Authenticate to an org via SFDX Auth URL or JWT                     |
+| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org)     | Create a scratch org (outputs `username` / `org-id`)                |
+| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org)     | Delete a scratch org (cleanup)                                      |
+| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy)                             | Deploy metadata, with delta and validation-only (dry-run) modes     |
+| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests)                       | Run Apex, LWC (Jest) and Flow tests with coverage reporting         |
+| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review)                   | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint  |
+| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org                 |
+| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import)                   | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)        |
+| [🛡️ sfdx-assign-permissions](https://github.com/svierk/sfdx-assign-permissions)     | Assign permission sets, permission set groups and licenses to users |
+| [📜 sfdx-apex-execute](https://github.com/svierk/sfdx-apex-execute)                 | Execute anonymous Apex, e.g. post-deploy scripts or data migrations |
 
 ## 🏗️ Architecture
 
@@ -62,16 +64,25 @@ flowchart TD
         direction TB
         F --> G[package-installation]
         G --> H[deploy]
-        H --> I[data-import]
-        I --> PW[generate password]
+        H --> AP[assign-permissions]
+        AP --> I[data-import]
+        I --> AX[apex-execute · setup]
+        AX --> PW[generate password]
     end
 
     subgraph sci [Scratch Org CI]
         direction TB
         F2 --> G2[package-installation]
         G2 --> H2[deploy]
-        H2 --> J[run-tests]
+        H2 --> AP2[assign-permissions]
+        AP2 --> AX2[apex-execute · setup]
+        AX2 --> J[run-tests]
         J --> L[delete-scratch-org · always]
+    end
+
+    subgraph dep [Deployment]
+        direction TB
+        M --> AX3[apex-execute · post-deploy]
     end
 
     classDef setup fill:#e3f2fd,stroke:#1565c0,color:#0d2b45;
@@ -115,10 +126,10 @@ jobs:
           persist-credentials: false # don't leave the GITHUB_TOKEN in .git/config for later steps
 
       - name: Install SF CLI
-        uses: svierk/sfdx-cli-setup@v1.1.2
+        uses: svierk/sfdx-cli-setup@v1.2.0
 
       - name: Salesforce Org Login
-        uses: svierk/sfdx-login@v1.4.2
+        uses: svierk/sfdx-login@v1.4.3
         with:
           client-id: ${{ secrets.SFDX_CONSUMER_KEY }}
           jwt-secret-key: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -126,7 +137,7 @@ jobs:
           alias: ci
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@v1.2.1
+        uses: svierk/sfdx-deploy@v1.3.0
         with:
           source-dir: force-app
           target-org: ci
@@ -138,12 +149,12 @@ jobs:
 
 For common scenarios you don't have to wire the blocks together yourself - call one of the maintained [reusable workflows](.github/workflows) instead:
 
-| Workflow                                                           | Purpose                                                                                                     |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| [pr-validation.yml](.github/workflows/pr-validation.yml)           | Validate a pull request: static analysis + check-only (delta) deployment with tests                         |
-| [create-scratch-org.yml](.github/workflows/create-scratch-org.yml) | Self-service scratch org provisioning: create → install packages → deploy → import data → generate password |
-| [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml)         | Full scratch org lifecycle for CI: create → deploy → test → delete                                          |
-| [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata to a sandbox or production org                                                              |
+| Workflow                                                           | Purpose                                                                                                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| [pr-validation.yml](.github/workflows/pr-validation.yml)           | Validate a pull request: static analysis + check-only (delta) deployment with tests                                                         |
+| [create-scratch-org.yml](.github/workflows/create-scratch-org.yml) | Self-service scratch org provisioning: create → install packages → deploy → assign permissions → import data → run Apex → generate password |
+| [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml)         | Full scratch org lifecycle for CI: create → deploy → assign permissions → run Apex → test → delete                                          |
+| [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata to a sandbox or production org, with optional post-deploy Apex scripts                                                      |
 
 Call one from your own repository like this:
 
@@ -156,7 +167,7 @@ permissions:
 
 jobs:
   pr-validation:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
     with:
       source-dir: force-app
     secrets:
@@ -177,10 +188,10 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 
 ## 🔐 Security & versioning
 
-Every `uses:` reference in this repository - in the [reusable workflows](.github/workflows), in the [examples](examples) and in the snippets above - is **pinned to an exact release version**, e.g. `svierk/sfdx-deploy@v1.2.1`. Do the same in your own pipelines:
+Every `uses:` reference in this repository - in the [reusable workflows](.github/workflows), in the [examples](examples) and in the snippets above - is **pinned to an exact release version**, e.g. `svierk/sfdx-deploy@v1.3.0`. Do the same in your own pipelines:
 
 - **Never reference a mutable ref** such as `@main` or `@v1`. It runs whatever code sits on that branch/tag at run time - with access to your org credentials - so a compromised or rewritten ref would run unnoticed.
-- **Good - pin to an exact release tag** (`@v1.2.1`). Readable, concrete, and bumped through reviewed pull requests. This is what the kit itself uses.
+- **Good - pin to an exact release tag** (`@v1.3.0`). Readable, concrete, and bumped through reviewed pull requests. This is what the kit itself uses.
 - **Strictest - pin to a full-length commit SHA** (`@a1b2c3d…`) with the version as a trailing comment. A SHA can never be re-pointed by the publisher; the cost is readability. Worth it for actions from publishers you don't control.
 - **Enable [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot) for `github-actions`** so those pins are bumped for you instead of silently ageing - see [.github/dependabot.yml](.github/dependabot.yml) for the setup used here (one grouped pull request per ecosystem, merged automatically once the required checks pass).
 

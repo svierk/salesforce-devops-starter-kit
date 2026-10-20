@@ -16,11 +16,13 @@ permissions:
 
 jobs:
   deploy:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.0.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.1.0
     with:
       source-dir: force-app
       target-org-alias: production
       test-level: RunLocalTests
+      # Run only a selection of Apex test classes instead (implies RunSpecifiedTests):
+      # apex-tests: AccountServiceTest,LeadServiceTest
       dry-run: false
       # Gate this deployment behind a GitHub Environment (required reviewers,
       # environment-scoped secrets). Create it under Settings → Environments and
@@ -29,6 +31,9 @@ jobs:
       # For an incremental deployment of changed components only:
       # delta: true
       # delta-from: <previous release tag or commit>
+      # Anonymous Apex post-deploy scripts (data migrations, cache clearing, ...),
+      # executed in alphabetical order after a successful, non-dry-run deployment:
+      # apex-file-path: ./scripts/apex/post-deploy/*.apex
     secrets:
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
