@@ -87,7 +87,9 @@ function mdTable(headers, rows) {
 
 function cell(value) {
   if (value === undefined || value === '') return '-';
-  return String(value).replace(/\|/g, '\\|');
+  // Descriptions are plain text: escape angle brackets, or a placeholder such
+  // as "promotion/<source>-<target>" is compiled as an HTML element by Vue.
+  return String(value).replace(/\|/g, '\\|').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function inputRows(inputs = {}) {
@@ -108,6 +110,10 @@ function secretRows(secrets = {}) {
   ]);
 }
 
+function outputRows(outputs = {}) {
+  return Object.entries(outputs).map(([name, spec]) => [`\`${name}\``, cell(spec.description)]);
+}
+
 /** Build one page per reusable workflow and return sidebar metadata. */
 function writeWorkflowPages() {
   const meta = [];
@@ -124,6 +130,10 @@ function writeWorkflowPages() {
     page += `[View source](${BLOB(config.repo, `.github/workflows/${wf.file}`)})\n\n`;
     page += `## Inputs\n\n${mdTable(['Input', 'Description', 'Type', 'Required', 'Default'], inputRows(call.inputs))}\n`;
     page += `## Secrets\n\n${mdTable(['Secret', 'Description', 'Required'], secretRows(call.secrets))}\n`;
+    // Most reusable workflows have no outputs - only list the section when there are some.
+    if (call.outputs && Object.keys(call.outputs).length) {
+      page += `## Outputs\n\n${mdTable(['Output', 'Description'], outputRows(call.outputs))}\n`;
+    }
 
     const examplePath = join(examplesDir, wf.example);
     if (existsSync(examplePath)) {

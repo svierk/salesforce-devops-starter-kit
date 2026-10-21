@@ -42,6 +42,11 @@ on:
         required: false
         type: string
         default: '3'
+      environment:
+        description: Optional GitHub Environment to validate in - its environment-scoped secrets select the org to validate against, e.g. one environment per target branch. Use an environment without required reviewers or branch restrictions, or every pull request waits for an approval or is rejected. Leave empty to use the repository secrets.
+        required: false
+        type: string
+        default: ''
     secrets:
       SFDX_CONSUMER_KEY:
         description: Consumer key (client ID) of the connected app used for the JWT flow.
@@ -63,6 +68,9 @@ jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
+    # An empty string means no environment and the repository secrets; pass one
+    # to validate against the org behind that environment instead.
+    environment: ${{ inputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1

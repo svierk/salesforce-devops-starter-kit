@@ -1,0 +1,70 @@
+# Example: call the reusable promote workflow.
+# Copy this file into your project's .github/workflows/ directory.
+#
+# Adds a "Run workflow" form to the Actions tab that prepares a promotion as a
+# pull request - for environment-branch models with story promotion or release
+# bundles (see the B2 blueprint):
+#
+# - story promotion:  target uat, sources feature/story-123
+# - release bundle:   target preprod, sources = the signed-off stories,
+#                     base main, branch release/2026-11
+#                     then: target main, base release/2026-11, no sources
+# - sync after release: target uat, sources main
+
+name: Promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment branch to promote into
+        type: choice
+        options: [integration, uat, preprod, main]
+      sources:
+        description: Branches to merge, comma-separated (empty = open a pull request from base)
+        type: string
+      base:
+        description: Branch to start from (empty = the target)
+        type: string
+      branch:
+        description: Name of the branch to create (empty = promotion/<source>-<target>)
+        type: string
+
+# The called workflow pushes the promotion branch and opens the pull request. A
+# reusable workflow can never get more permissions than the caller grants here.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.3.0
+    with:
+      target: ${{ inputs.target }}
+      sources: ${{ inputs.sources }}
+      base: ${{ inputs.base }}
+      branch: ${{ inputs.branch }}
+    # A GitHub App with contents and pull request write access, installed on this
+    # repository. Without it the pull request is opened with the GITHUB_TOKEN and
+    # the PR validation never starts on it.
+    secrets:
+      PROMOTION_APP_ID: ${{ secrets.PROMOTION_APP_ID }}
+      PROMOTION_APP_PRIVATE_KEY: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+
+# To open the sync pull requests automatically after every production
+# deployment, add a second workflow triggered on push to main:
+#
+#   on:
+#     push:
+#       branches: [main]
+#   jobs:
+#     sync:
+#       strategy:
+#         fail-fast: false
+#         matrix:
+#           target: [integration, uat, preprod]
+#       uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.3.0
+#       with:
+#         target: ${{ matrix.target }}
+#         sources: main
+#       secrets: inherit

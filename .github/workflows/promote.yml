@@ -1,0 +1,179 @@
+name: Promote
+
+# Reusable workflow that prepares a promotion between long-lived branches as a
+# pull request: it cuts a branch from a base, merges one or more source branches
+# into it and opens a pull request into the target. One mechanism covers story
+# promotion, release bundles and the sync of environment branches after a
+# release. Merge conflicts are never resolved automatically - the run fails and
+# its summary lists the files and the commands to finish the promotion locally.
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: Branch the pull request goes into, e.g. "uat".
+        required: true
+        type: string
+      sources:
+        description: Comma-separated or multi-line list of branches to merge, in order, e.g. "feature/story-123". Leave empty to open the pull request from the base branch itself, e.g. a release branch into main.
+        required: false
+        type: string
+        default: ''
+      base:
+        description: Branch to cut the promotion branch from. Leave empty to use the target - right for story promotion and the sync after a release.
+        required: false
+        type: string
+        default: ''
+      branch:
+        description: Name of the branch to create, e.g. "release/2026-11". Leave empty for "promotion/<source>-<target>" with one source, or "promotion/<target>-<run number>" with several.
+        required: false
+        type: string
+        default: ''
+      title:
+        description: Title of the pull request. Leave empty for "Promote <sources> to <target>".
+        required: false
+        type: string
+        default: ''
+    secrets:
+      PROMOTION_APP_ID:
+        description: ID of a GitHub App with contents and pull request write access. Pull requests opened with the default GITHUB_TOKEN do not trigger other workflows, so without an app the pull request validation never starts on the promotion pull request.
+        required: false
+      PROMOTION_APP_PRIVATE_KEY:
+        description: Private key of that GitHub App.
+        required: false
+    outputs:
+      pull-request:
+        description: URL of the opened pull request; empty when there was nothing to promote.
+        value: ${{ jobs.promote.outputs.pull-request }}
+      branch:
+        description: Name of the branch the pull request was opened from.
+        value: ${{ jobs.promote.outputs.branch }}
+
+# Write access to push the promotion branch and open the pull request. It is
+# only used when no GitHub App is configured; the caller must grant it as well.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    name: Promote
+    runs-on: ubuntu-latest
+    outputs:
+      pull-request: ${{ steps.promote.outputs.pull-request }}
+      branch: ${{ steps.promote.outputs.branch }}
+    env:
+      USE_APP: ${{ secrets.PROMOTION_APP_ID != '' && secrets.PROMOTION_APP_PRIVATE_KEY != '' }}
+    steps:
+      - name: Create GitHub App Token
+        id: app-token
+        if: ${{ env.USE_APP == 'true' }}
+        uses: actions/create-github-app-token@v3.3.0
+        with:
+          app-id: ${{ secrets.PROMOTION_APP_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Warn About GITHUB_TOKEN
+        if: ${{ env.USE_APP != 'true' }}
+        run: echo "::warning::No GitHub App configured - the pull request is opened with the GITHUB_TOKEN, so no other workflow (such as PR validation) starts on it. Pass PROMOTION_APP_ID and PROMOTION_APP_PRIVATE_KEY to fix this."
+
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false # the push below authenticates explicitly - don't leave a token in .git/config
+
+      - name: Prepare Promotion
+        id: promote
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          TARGET: ${{ inputs.target }}
+          SOURCES: ${{ inputs.sources }}
+          BASE: ${{ inputs.base }}
+          BRANCH: ${{ inputs.branch }}
+          TITLE: ${{ inputs.title }}
+        run: |
+          set -euo pipefail
+
+          # Comma-separated or multi-line, blanks ignored.
+          mapfile -t sources < <(printf '%s\n' "$SOURCES" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sed '/^$/d')
+          base="${BASE:-$TARGET}"
+          listed="$(printf '%s, ' "${sources[@]}")"
+          listed="${listed%, }"
+
+          if [[ ${#sources[@]} -eq 0 ]]; then
+            # Nothing to merge: propose the base branch itself, e.g. a release branch into main.
+            branch="$base"
+          elif [[ -n "$BRANCH" ]]; then
+            branch="$BRANCH"
+          elif [[ ${#sources[@]} -eq 1 ]]; then
+            branch="promotion/${sources[0]##*/}-${TARGET}"
+          else
+            branch="promotion/${TARGET}-${GITHUB_RUN_NUMBER}"
+          fi
+          title="${TITLE:-Promote ${listed:-$base} to $TARGET}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+          git fetch --quiet origin
+          for ref in "$TARGET" "$base" "${sources[@]}"; do
+            git rev-parse --verify --quiet "origin/$ref" > /dev/null || { echo "::error::Branch '$ref' does not exist."; exit 1; }
+          done
+
+          if [[ ${#sources[@]} -gt 0 ]]; then
+            if git rev-parse --verify --quiet "origin/$branch" > /dev/null; then
+              echo "::error::Branch '$branch' already exists - delete it, or pass another name via the branch input."
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git switch --quiet -c "$branch" "origin/$base"
+
+            for source in "${sources[@]}"; do
+              if ! git merge --no-ff --no-edit --quiet "origin/$source"; then
+                conflicts="$(git diff --name-only --diff-filter=U)"
+                git merge --abort
+                {
+                  echo "## Promotion stopped: merge conflict"
+                  echo
+                  echo "Merging \`$source\` into a branch cut from \`$base\` conflicts in:"
+                  echo
+                  # Line by line - Salesforce file names contain spaces (layouts, for one).
+                  while IFS= read -r file; do printf -- '- `%s`\n' "$file"; done <<< "$conflicts"
+                  echo
+                  echo "Resolve it locally - the conflict belongs on the promotion branch, not on \`$source\`:"
+                  echo
+                  echo '```bash'
+                  echo "git fetch origin"
+                  echo "git switch -c $branch origin/$base"
+                  for s in "${sources[@]}"; do echo "git merge --no-ff origin/$s"; done
+                  echo "# resolve the conflicts, then: git add <files> && git commit"
+                  echo "git push -u origin $branch"
+                  echo "gh pr create --base $TARGET --title \"$title\""
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"
+                echo "::error::Merging $source conflicts - see the run summary for the files and the commands to resolve it locally."
+                exit 1
+              fi
+            done
+
+            # Compare commits, not content: after a release, main can carry merge
+            # commits without file changes that still belong in every stage.
+            if [[ "$(git rev-list --count "origin/$TARGET..HEAD")" -eq 0 ]]; then
+              echo "::notice::Nothing to promote - $TARGET already contains $listed."
+              echo "pull-request=" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            # Authenticate this one push only, the same way actions/checkout does.
+            auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            echo "::add-mask::$auth"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push --quiet origin "HEAD:refs/heads/$branch"
+          fi
+
+          body="Prepared by the [Promote workflow](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}): \`${listed:-$base}\` into \`$TARGET\`."
+          url="$(gh pr create --base "$TARGET" --head "$branch" --title "$title" --body "$body")"
+          echo "pull-request=$url" >> "$GITHUB_OUTPUT"
+          echo "Opened $url" >> "$GITHUB_STEP_SUMMARY"

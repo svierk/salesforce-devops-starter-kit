@@ -114,7 +114,7 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.3.0
     with:
       source-dir: force-app
       delta: true
@@ -146,7 +146,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.3.0
     with:
       source-dir: force-app
       target-org-alias: ${{ github.ref_name }}

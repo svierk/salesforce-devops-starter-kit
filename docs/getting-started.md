@@ -24,7 +24,7 @@ Every blueprint documents its migration path to the next one. Start with the sim
 
 Follow [authentication.md](authentication.md) to authenticate your org with the JWT flow and store the credentials as GitHub Actions secrets (`SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME`). This is the only manual setup step.
 
-If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the deployment workflow resolves them per environment, so one caller serves every stage. Pull request validation and scratch org CI keep using the repository secrets.
+If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the deployment workflow resolves them per environment, so one caller serves every stage. Pull request validation can use the same mechanism through its own `environment` input; scratch org CI keeps using the repository secrets of your Dev Hub.
 
 ## 4. Choose a starting point
 
@@ -49,7 +49,7 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.3.0
     with:
       source-dir: force-app
     secrets:
