@@ -50,7 +50,7 @@ flowchart LR
 - **One staging sandbox** (Partial Copy is usually enough) to install package versions into against realistic data before production.
 - **Production**, receiving package installs rather than metadata deployments.
 
-This blueprint is much lighter on sandbox entitlement than [B2](b2-multi-team-release-branches.md) - it trades sandbox licences for Dev Hub scratch org capacity and for the engineering effort of packaging.
+This blueprint is much lighter on sandbox entitlement than [B2](b2-multi-team-environment-branches.md) - it trades sandbox licences for Dev Hub scratch org capacity and for the engineering effort of packaging.
 
 ## Branch model
 

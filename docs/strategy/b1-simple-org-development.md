@@ -48,7 +48,7 @@ No Full or Partial Copy sandbox is required, so this blueprint runs inside a sta
 - `main` is always deployable and is the only long-lived branch.
 - `feature/*` branches are short-lived - hours to a few days. Anything longer means the change should have been split or feature-flagged.
 - Merge by pull request only, squash or merge commit as you prefer.
-- No `develop`, no release branches. If you feel you need one, read [B2](b2-multi-team-release-branches.md) before adding it.
+- No `develop`, no release branches. If you feel you need one, read [B2](b2-multi-team-environment-branches.md) before adding it.
 
 ## Promotion path & roles
 
@@ -140,7 +140,7 @@ jobs:
 
 ## Migration path
 
-**To [B2](b2-multi-team-release-branches.md)** when a second stream appears and you start holding merges back to avoid shipping someone else's half-finished work, or when a stakeholder needs a stage to sign off in before production.
+**To [B2](b2-multi-team-environment-branches.md)** when a second stream appears and you start holding merges back to avoid shipping someone else's half-finished work, or when a stakeholder needs a stage to sign off in before production.
 
 **To [B3](b3-package-based-modular.md)** directly, skipping B2, if your metadata is already modular and you would rather invest in packaging than in stages. This is the better move if the pressure is "teams block each other" rather than "we need an approval gate".
 

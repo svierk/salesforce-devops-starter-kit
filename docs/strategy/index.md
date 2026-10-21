@@ -16,7 +16,7 @@ A blueprint is a starting point, not an identity. Every blueprint page ends with
 
 ## Find your blueprint
 
-Three to five questions, one at a time - the questionnaire only asks what can still change your answer. Your path lights up in the decision tree as you go, and the result carries a link you can paste into a ticket.
+A handful of questions, one at a time - the questionnaire only asks what can still change your result. Your path lights up in the decision tree as you go, and the result carries a link you can paste into a ticket.
 
 <ClientOnly>
   <StrategyWizard />
@@ -29,21 +29,24 @@ The questionnaire above is interactive on the [documentation site](https://svier
 
 ```mermaid
 flowchart TD
-    Q1{"How many teams or<br/>parallel workstreams?"}
-    Q1 -->|One| Q3{"Mostly admins and<br/>low-code builders?"}
-    Q1 -->|Several| Q2{"Single-org or<br/>multi-org?"}
+    QO{"How many<br/>production orgs?"}
+    QO -->|Several| B4["<b>B4</b><br/>Multi-Org / Regional"]
+    QO -->|One| QT{"How many teams or<br/>parallel workstreams?"}
 
-    Q3 -->|Yes| B5["<b>B5</b><br/>Low-Code First"]
-    Q3 -->|No| B1["<b>B1</b><br/>Simple Org Development"]
+    QT -->|One| QL{"Mostly admins and<br/>low-code builders?"}
+    QT -->|Several| QM{"Level 2+ and metadata<br/>modular enough for packages?"}
 
-    Q2 -->|Multi-org| B4["<b>B4</b><br/>Multi-Org / Regional"]
-    Q2 -->|Single-org| Q4{"Metadata modular enough<br/>for packages, maturity 3-4?"}
+    QL -->|Yes| B5["<b>B5</b><br/>Low-Code First"]
+    QL -->|No| B1["<b>B1</b><br/>Simple Org Development"]
 
-    Q4 -->|Yes| B3["<b>B3</b><br/>Package-Based / Modular"]
-    Q4 -->|Not yet| B2["<b>B2</b><br/>Multi-Team with Release Branches"]
+    QM -->|Yes| B3["<b>B3</b><br/>Package-Based / Modular"]
+    QM -->|Not yet| QR{"Ship story by story<br/>or on release dates?"}
+
+    QR -->|Story by story| B2S["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]
+    QR -->|Release dates| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]
 
     classDef bp fill:#dde4f9,stroke:#1d4ed8,color:#0b1a4a,font-weight:bold;
-    class B1,B2,B3,B4,B5 bp;
+    class B1,B2S,B2T,B3,B4,B5 bp;
 ```
 
 </details>
@@ -54,13 +57,13 @@ Take the simpler one. Adding a long-lived branch later is far cheaper than unwin
 
 ## The five blueprints
 
-| Blueprint                                                                    | Fits when                                                | Org landscape                              | Branch model                                 |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------ | -------------------------------------------- |
-| [**B1** Simple Org Development](b1-simple-org-development.md)                | One team, one production org, getting started            | 1 developer sandbox + production           | GitHub Flow (`main` + `feature/*`)           |
-| [**B2** Multi-Team with Release Branches](b2-multi-team-release-branches.md) | Several streams, fixed release trains, approval gates    | Integration + UAT + PreProd + production   | Promotion chain of major branches            |
-| [**B3** Package-Based / Modular](b3-package-based-modular.md)                | Modularised metadata, high maturity, continuous delivery | Scratch orgs + few sandboxes               | Trunk-based + short-lived feature branches   |
-| [**B4** Multi-Org / Regional Rollout](b4-multi-org-regional.md)              | Several production orgs by region or business unit       | One org per region/BU, shared core package | Trunk + per-org release branches             |
-| [**B5** Low-Code First](b5-low-code-admin-first.md)                          | Admin-heavy team, Git knowledge is the bottleneck        | Dev + UAT + production, heavy automation   | Simplified environment branches, tool-driven |
+| Blueprint                                                                            | Fits when                                                | Org landscape                              | Branch model                                                       |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| [**B1** Simple Org Development](b1-simple-org-development.md)                        | One team, one production org, getting started            | 1 developer sandbox + production           | GitHub Flow (`main` + `feature/*`)                                 |
+| [**B2** Multi-Team with Environment Branches](b2-multi-team-environment-branches.md) | Several streams, one production org, approval gates      | Integration + UAT + PreProd + production   | One branch per org - promoted as a release train or story by story |
+| [**B3** Package-Based / Modular](b3-package-based-modular.md)                        | Modularised metadata, high maturity, continuous delivery | Scratch orgs + few sandboxes               | Trunk-based + short-lived feature branches                         |
+| [**B4** Multi-Org / Regional Rollout](b4-multi-org-regional.md)                      | Several production orgs by region or business unit       | One org (chain) per region/BU, shared core | Trunk + per-org release branches, or a B2 chain per org            |
+| [**B5** Low-Code First](b5-low-code-admin-first.md)                                  | Admin-heavy team, Git knowledge is the bottleneck        | Dev + UAT + production, heavy automation   | Simplified environment branches, tool-driven                       |
 
 ## How to read a blueprint page
 
@@ -77,4 +80,4 @@ Every blueprint documents the same eight things, so you can diff them against ea
 
 ## Background
 
-If you want the reasoning rather than the recommendation, [Dimensions & Trade-Offs](dimensions.md) covers sandbox types and licence bundles, org development vs. package development, the common branching models and the maturity signals (DORA) used throughout this section.
+If you want the reasoning rather than the recommendation, [Dimensions & Trade-Offs](dimensions.md) covers sandbox types and licence bundles, org development vs. package development, the common branching models, release styles and the maturity signals (DORA) used throughout this section.

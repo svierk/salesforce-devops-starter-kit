@@ -18,7 +18,7 @@
   "strategy": [
     { "slug": "questions", "text": "The Five Questions" },
     { "slug": "b1-simple-org-development", "text": "B1 · Simple Org Development" },
-    { "slug": "b2-multi-team-release-branches", "text": "B2 · Multi-Team with Release Branches" },
+    { "slug": "b2-multi-team-environment-branches", "text": "B2 · Multi-Team with Environment Branches" },
     { "slug": "b3-package-based-modular", "text": "B3 · Package-Based / Modular" },
     { "slug": "b4-multi-org-regional", "text": "B4 · Multi-Org / Regional Rollout" },
     { "slug": "b5-low-code-admin-first", "text": "B5 · Low-Code First" },

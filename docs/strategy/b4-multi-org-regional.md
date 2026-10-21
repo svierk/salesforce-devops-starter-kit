@@ -1,17 +1,19 @@
 # B4 - Multi-Org / Regional Rollout
 
-Several production orgs - by region, business unit or brand - fed from one repository. A shared core travels as a package; local differences stay local.
+Several production orgs - by region, business unit or brand - with a shared core that is maintained once while local differences stay local.
+
+Two shapes work. The default below is **a trunk with a packaged core**: one repository, the core released as package versions, each org adopting them on its own schedule. The alternative is **[per-org environment chains](#per-org-environment-chains)**: one repository per org, each running [B2](b2-multi-team-environment-branches.md), with the shared metadata in a repository of its own.
 
 ## At a glance
 
-|                   |                                                                 |
-| ----------------- | --------------------------------------------------------------- |
-| **Team size**     | 10-50+, usually a core team plus local teams                    |
-| **Environments**  | One sandbox chain per production org, plus shared scratch orgs  |
-| **Branch model**  | Trunk plus one short release branch per org rollout             |
-| **Cadence**       | Core releases continuously; each org adopts on its own schedule |
-| **Maturity**      | Level 3-4 - do not attempt this below level 3                   |
-| **Prerequisites** | A packaged core; sandbox entitlement per production org         |
+|                   |                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| **Team size**     | 10-50+, usually a core team plus local teams                                                       |
+| **Environments**  | One sandbox chain per production org, plus shared scratch orgs                                     |
+| **Branch model**  | Trunk plus one short release branch per org rollout - or a B2 chain per org                        |
+| **Cadence**       | Core releases continuously; each org adopts on its own schedule                                    |
+| **Maturity**      | Level 3-4 for the trunk shape; per-org chains work from level 2-3                                  |
+| **Prerequisites** | A packaged core, or a defined way to share common metadata; sandbox entitlement per production org |
 
 ## Target picture
 
@@ -57,14 +59,14 @@ The sandbox cost scales with the number of orgs, and so does everything else: se
 
 Two workable shapes:
 
-|                              | Monorepo (recommended)                               | Multi-repo                                                   |
-| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
-| Layout                       | One repo: `packages/core` + `orgs/<region>` overlays | Core repo publishes packages; one repo per org consumes them |
-| Core change reaches all orgs | Atomically, in one pull request                      | Via a version bump per repo                                  |
-| Local team autonomy          | Lower - shared CI, shared review                     | Higher - own repo, own cadence                               |
-| Fits                         | Strong shared core, central platform team            | Highly autonomous regions, weak shared core                  |
+|                              | Monorepo (recommended)                               | Multi-repo                                                                                                               |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Layout                       | One repo: `packages/core` + `orgs/<region>` overlays | One repo per org, plus a shared repo for common metadata - consumed as a package or deployed alongside each org's source |
+| Core change reaches all orgs | Atomically, in one pull request                      | Via a version bump per repo                                                                                              |
+| Local team autonomy          | Lower - shared CI, shared review                     | Higher - own repo, own cadence                                                                                           |
+| Fits                         | Strong shared core, central platform team            | Autonomous orgs with their own teams; the home of per-org environment chains                                             |
 
-Start with the monorepo. Splitting later is mechanical; merging back is not.
+Start with the monorepo if one platform team owns the core. Splitting later is mechanical; merging back is not. Choose multi-repo from the start when each org already has its own team and its own release rhythm.
 
 Structure the source so that "shared" and "local" are unambiguous:
 
@@ -84,7 +86,13 @@ config/
 - `release/<org>` branches are **short-lived** - created for a rollout, merged or deleted after it lands. They exist to pin the core version an org is adopting and to carry rollout-specific fixes.
 - Org-local metadata under `orgs/<region>/` changes on `main` too. It is scoped by path, not by branch.
 
-**The anti-pattern to avoid:** a permanent long-lived branch per production org. That is [branch-per-org](dimensions.md#branching-models) at organisational scale, and it guarantees that the regions diverge until the shared core is a fiction. Version pinning through packages is what keeps orgs independent - not branches.
+**The anti-pattern to avoid:** a permanent long-lived branch per production org _inside one repository_. That is [branch-per-org](dimensions.md#branching-models) at organisational scale, and it guarantees that the regions diverge until the shared core is a fiction. Version pinning through packages is what keeps orgs independent - not branches.
+
+### Per-org environment chains
+
+When each org has its own team, its own sandbox chain and its own approval process, run [B2](b2-multi-team-environment-branches.md) **once per org, in that org's own repository** - as a release train or with story promotion, whichever fits how that org releases. The orgs stay independent the way separate repositories are independent, not through branches.
+
+What remains shared is the common metadata. Keep it in its own repository with its own review, and decide once how it reaches the orgs: as a package version each org pins, or as source deployed together with each org's metadata. Either way, a change to shared metadata is a change to every org - validate it against each of them before it lands.
 
 ## Promotion path & roles
 
@@ -111,9 +119,11 @@ Set a maximum version lag - "no org may be more than two core versions behind". 
 - **Divergence is the default outcome.** Every local exception is reasonable in isolation and corrosive in aggregate. Review what goes into `orgs/<region>/` as strictly as you review the core.
 - **Cross-org reporting is somebody's problem.** This blueprint does not solve it; it makes it harder. Data platform work usually follows.
 - **A change failing in region three of five** leaves you partially rolled out with no rollback. Decide in advance whether you pause the rollout or fix forward.
-- **Do not run five full B2 chains in parallel.** If each org needs four stages, the operational load is unmanageable. Keep the per-org chain to one sandbox plus production.
+- **Size each org's chain to its own approval process.** Full four-stage chains per org work when each org has a team and a repository of its own. Run centrally by one team, five of them are unmanageable - then keep each chain to one sandbox plus production.
 
 ## Kit mapping
+
+The callers below are for the trunk shape. **With per-org environment chains**, each org's repository uses the [B2 callers](b2-multi-team-environment-branches.md#kit-mapping) unchanged - the multi-org part is the shared metadata, not the pipeline.
 
 **Fan out with a matrix.** One caller deploys to every org, with a GitHub Environment per org carrying that org's credentials and approval rules:
 

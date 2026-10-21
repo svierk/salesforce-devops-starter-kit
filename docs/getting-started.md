@@ -8,7 +8,7 @@ Before you wire up a single workflow, settle **which** org landscape and branchi
 
 If you already have a branching model that works, skip ahead. If you do not, or you are not sure it still fits:
 
-➡️ **[Find your blueprint](strategy/index.md)** - a guided questionnaire, three to five questions, leading to one of five blueprints. Each blueprint page lists the exact workflows, GitHub Environments and branch protection rules to configure, so you arrive at step 4 below knowing what to copy.
+➡️ **[Find your blueprint](strategy/index.md)** - a short guided questionnaire - a handful of questions - leading to one of five blueprints. Each blueprint page lists the exact workflows, GitHub Environments and branch protection rules to configure, so you arrive at step 4 below knowing what to copy.
 
 ::: tip Not a commitment
 Every blueprint documents its migration path to the next one. Start with the simplest model that fits and move when the signals say so - [Org & Branching Strategy](strategy/index.md) covers both.

@@ -6,17 +6,17 @@ Background for the [five questions](questions.md). Read this if you want to argu
 
 Your branching model can never be richer than your sandbox budget. Each long-lived branch in an environment-style model needs an org behind it, and those orgs are licensed, sized and rate-limited.
 
-| Type          | Storage (data / file)               | Contains               | Refresh interval |
-| ------------- | ----------------------------------- | ---------------------- | ---------------- |
-| Developer     | 200 MB / 200 MB                     | Metadata only          | 1 day            |
-| Developer Pro | 1 GB / 1 GB                         | Metadata only          | 1 day            |
-| Partial Copy  | 5 GB / 5 GB, sampled via a template | Metadata + sample data | 5 days           |
-| Full          | Same as production                  | Metadata + all data    | 29 days          |
+| Type          | Storage (data / file)                                                                            | Contains               | Refresh interval |
+| ------------- | ------------------------------------------------------------------------------------------------ | ---------------------- | ---------------- |
+| Developer     | 200 MB / 200 MB                                                                                  | Metadata only          | 1 day            |
+| Developer Pro | 1 GB / 1 GB                                                                                      | Metadata only          | 1 day            |
+| Partial Copy  | 5 GB data, sampled via a template (up to 10,000 records per object) / file storage as production | Metadata + sample data | 5 days           |
+| Full          | Same as production                                                                               | Metadata + all data    | 29 days          |
 
 The **refresh interval** is the constraint people underestimate. A Full sandbox used as pre-production can only be brought back in line with production once every 29 days - so it drifts, and the drift is invisible until a deployment fails there and not in production.
 
 ::: warning Licences are edition-dependent
-Sandbox entitlements ship with the edition, and the gap between editions is large. Enterprise Edition includes Developer and Partial Copy sandboxes but **not** Full or Developer Pro - those are a paid add-on. Performance and Unlimited Edition include a Full sandbox and several Developer Pro sandboxes as standard.
+Sandbox entitlements ship with the edition, and the gap between editions is large. Enterprise Edition includes 25 Developer sandboxes and one Partial Copy but **not** Full or Developer Pro - those are a [paid add-on](https://www.salesforce.com/editions-pricing/platform/environments/), priced as a share of your net spend (at list price roughly 5 % for Developer Pro, 20 % for Partial Copy and 30 % for Full). Performance and Unlimited Edition include a Full sandbox and several Developer Pro sandboxes as standard.
 
 Any blueprint below that asks for a Full-copy UAT or pre-production stage is therefore a **budget decision** on Enterprise Edition, not just a technical one. Entitlements change; confirm yours against [Salesforce Help](https://help.salesforce.com/s/articleView?id=platform.deploy_sandboxes_parent.htm&type=5) before you plan around them.
 :::
@@ -56,18 +56,33 @@ The established framing comes from operating-model theory - business process **i
 
 ## Branching models
 
-| Model                                     | Shape                                            | Fits                                                           | Watch out for                                                                          |
-| ----------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **GitHub Flow / feature branch**          | `main` + short-lived `feature/*`                 | Small teams, Git newcomers, [B1](b1-simple-org-development.md) | Nothing between a merge and production - production gating has to be a deployment gate |
-| **Git Flow**                              | `main` + `develop` + release and hotfix branches | Structured sprint releases, larger teams                       | Two permanent branches to keep in sync; heavy for most Salesforce teams                |
-| **Environment branches (branch-per-org)** | One long-lived branch per org                    | Widely used, and the model most vendor tools implement         | See the warning below                                                                  |
-| **Trunk-based**                           | One branch + feature flags                       | High maturity, [B3](b3-package-based-modular.md)               | Requires real discipline and a quality gate that actually blocks                       |
+| Model                                      | Shape                                                                                                      | Fits                                                                                                                                                                               | Watch out for                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **GitHub Flow / feature branch**           | `main` + short-lived `feature/*`                                                                           | Small teams, Git newcomers, [B1](b1-simple-org-development.md)                                                                                                                     | Nothing between a merge and production - production gating has to be a deployment gate |
+| **Git Flow**                               | `main` + `develop` + release and hotfix branches                                                           | Structured sprint releases, larger teams                                                                                                                                           | Two permanent branches to keep in sync; heavy for most Salesforce teams                |
+| **Environment branches - release train**   | One long-lived branch per org; the whole state moves stage to stage                                        | Planned release dates with approval gates, [B2](b2-multi-team-environment-branches.md#release-train)                                                                               | Permanent merge overhead - see the warning below                                       |
+| **Environment branches - story promotion** | One long-lived branch per org; each story is merged into each stage through a short-lived promotion branch | Independent stories with approval gates, [B2](b2-multi-team-environment-branches.md#story-promotion); the model of Gearset Pipelines, and in principle of Copado and DevOps Center | Stages drift apart by design - sync them after every release                           |
+| **Trunk-based**                            | One branch + feature flags                                                                                 | High maturity, [B3](b3-package-based-modular.md)                                                                                                                                   | Requires real discipline and a quality gate that actually blocks                       |
 
-::: danger Branch-per-org is an anti-pattern without a tool behind it
-Mapping one long-lived Git branch to each Salesforce org is the most common Salesforce branching model, and most teams adopt it without examining why. It is workable when a DevOps platform (Copado, Gearset Pipelines and similar) manages the promotion and conflict resolution for you. Operated by hand it means permanent merge overhead across four or more long-lived branches, and it degrades into using Git as a metadata backup rather than as a review mechanism.
+::: warning Branch-per-org as an org mirror is an anti-pattern
+Mapping one long-lived Git branch to each Salesforce org is the most common Salesforce branching model, and most teams adopt it without examining why. The model itself is workable. What fails is the version where promotions stop being reviewed pull requests and the branches become a copy of whatever is in each org - Git as a metadata backup rather than as a review mechanism.
 
-If you land on an environment-style model - [B2](b2-multi-team-release-branches.md) or [B5](b5-low-code-admin-first.md) - adopt it deliberately, keep the number of stages to the minimum that your approval process actually requires, and insist that every promotion is a reviewed pull request.
+What keeps it healthy is automation and discipline: every promotion a reviewed pull request, conflicts resolved in a defined place, and a regular sync so the branches cannot drift apart. DevOps platforms (Copado, Gearset Pipelines and similar) provide that out of the box; with GitHub Actions and this kit you provide it yourself - [B2](b2-multi-team-environment-branches.md) shows both variants.
+
+If you land on an environment-style model - [B2](b2-multi-team-environment-branches.md) or [B5](b5-low-code-admin-first.md) - adopt it deliberately and keep the number of stages to the minimum that your approval process actually requires.
 :::
+
+## Release styles
+
+How you release is a separate choice from how you branch, and it narrows the branching options more than people expect. [Question 5](questions.md#_5-how-do-you-release) asks it.
+
+| Release style          | A release is                                     | Fits                                                                                                                                              |
+| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Continuous**         | One change, shipped as soon as it is ready       | [B1](b1-simple-org-development.md), [B2 story promotion](b2-multi-team-environment-branches.md#story-promotion), [B5](b5-low-code-admin-first.md) |
+| **Release dates**      | A dated bundle with a frozen scope               | [B2 release train](b2-multi-team-environment-branches.md#release-train), [B4](b4-multi-org-regional.md) rollouts per org                          |
+| **Versioned packages** | A promoted package version, installed org by org | [B3](b3-package-based-modular.md), the shared core in [B4](b4-multi-org-regional.md)                                                              |
+
+Release dates do not require release branches. In [B1](b1-simple-org-development.md), merging stays continuous and only the production deployment waits for the date - run it from a release tag or a manually triggered workflow, behind a GitHub Environment with required reviewers.
 
 ## Salesforce-specific pitfalls
 
@@ -91,14 +106,14 @@ The [DORA metrics](https://dora.dev/guides/dora-metrics/) are the standard vocab
 | Failed deployment recovery time | How fast do you recover from one?                            |
 | Deployment rework rate          | What share of deployments are unplanned fixes for incidents? |
 
-Condensed into the four levels used in [question 4](questions.md#_4-what-is-your-devops-maturity):
+Condensed into the four levels used in [question 4](questions.md#_4-how-mature-is-your-devops-practice-and-how-modular-is-your-metadata):
 
 1. **Starting out** - manual or lightly scripted deployments, no metrics, testing late.
 2. **Automated** - CI on every pull request, scripted deployments, static analysis blocking.
 3. **Measured** - delta deployments, tracked DORA metrics, deliberate environment strategy.
-4. **Optimised** - trunk-based, feature-flagged, elite-range frequency and lead time, low change failure rate.
+4. **Optimised** - trunk-based, feature-flagged, delivery metrics tracked and improving against your own baseline.
 
-Use the metrics as **migration triggers**, not as a scoreboard. Each blueprint page states which signals mean you are ready for the next one.
+Use the metrics as **migration triggers**, not as a scoreboard. DORA itself no longer publishes industry performance tiers and warns against fixed targets and comparisons between teams - compare each team with its own baseline. Each blueprint page states which signals mean you are ready for the next one.
 
 ## Salesforce DevOps Center
 

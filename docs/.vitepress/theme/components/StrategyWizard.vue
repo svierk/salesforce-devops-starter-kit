@@ -18,6 +18,19 @@ import { withBase } from 'vitepress';
 import { renderMermaid } from '../mermaid';
 
 const QUESTIONS = {
+  orgs: {
+    label: 'Org landscape',
+    title: 'How many production orgs do you run?',
+    why: 'Asked first because it is an architecture decision your DevOps model has to follow. It decides your repository topology and how far the pipeline fans out. Count production orgs only - sandboxes do not count.',
+    options: [
+      { value: 'single', label: 'One production org', detail: 'One deployment target, one source of truth.' },
+      {
+        value: 'multi',
+        label: 'Several (region, business unit, brand)',
+        detail: 'The same change may land in each of them, on different schedules.'
+      }
+    ]
+  },
   teams: {
     label: 'Teams',
     title: 'How many teams or parallel workstreams?',
@@ -52,50 +65,64 @@ const QUESTIONS = {
       }
     ]
   },
-  orgs: {
-    label: 'Org landscape',
-    title: 'How many production orgs do you run?',
-    why: 'This decides your repository topology and how far the pipeline fans out. Count production orgs only - sandboxes do not count.',
-    options: [
-      { value: 'single', label: 'One production org', detail: 'One deployment target, one source of truth.' },
-      {
-        value: 'multi',
-        label: 'Several (region, business unit, brand)',
-        detail: 'The same change may land in each of them, on different schedules.'
-      }
-    ]
-  },
   maturity: {
-    label: 'Modularity',
-    title: 'Is your metadata modular enough for packages, and your DevOps practice mature?',
-    why: 'Packaging is what removes long-lived branches. It needs metadata that genuinely factors apart, plus CI, delta deployments and tracked metrics already in place.',
+    label: 'Maturity',
+    title: 'How mature is your DevOps practice?',
+    why: 'Maturity caps how many environments you can operate. Counter-intuitively, higher maturity means fewer long-lived branches, not more.',
     options: [
       {
-        value: 'high',
-        label: 'Yes - modular, and maturity level 3-4',
-        detail: 'CI on every PR, delta deployments, metrics tracked, metadata separable in practice.'
+        value: 'starting',
+        label: 'Level 1 - starting out',
+        detail: 'Manual or barely automated deployments, tests run late, no metrics.'
       },
       {
-        value: 'low',
-        label: 'Not yet - one happy soup, maturity level 2-3',
-        detail: 'Staged promotion is the realistic model until packaging lands.'
+        value: 'established',
+        label: 'Level 2-3 - established',
+        detail: 'CI on every pull request, scripted and delta deployments, failure rates watched.'
+      },
+      {
+        value: 'advanced',
+        label: 'Level 4 - advanced',
+        detail: 'Trunk-based or near it, feature flags, delivery metrics tracked and improving.'
       }
     ]
   },
-  cadence: {
-    label: 'Cadence',
+  modularity: {
+    label: 'Modularity',
+    title: 'Is your metadata modular enough for packages?',
+    why: 'Packaging is what removes long-lived branches. It needs metadata that genuinely factors apart in practice - not just on a whiteboard.',
+    options: [
+      {
+        value: 'modular',
+        label: 'Yes - it splits into separable parts',
+        detail: 'Clear module boundaries and explicit dependencies between them.'
+      },
+      {
+        value: 'monolith',
+        label: 'Not yet - one happy soup',
+        detail: 'Everything references everything; staged promotion is the realistic model.'
+      }
+    ]
+  },
+  release: {
+    label: 'Release style',
     title: 'How do you release?',
-    why: 'This does not change your blueprint, but it decides your approval gates: which GitHub Environments need required reviewers, and where segregation of duties applies.',
+    why: 'What a release is for you decides how changes travel to production. With several streams on one org it picks between two variants of the blueprint; everywhere else it shapes how you set the blueprint up.',
     options: [
       {
         value: 'continuous',
-        label: 'Continuously, on demand',
-        detail: 'Merging is the release decision.'
+        label: 'Continuously, story by story',
+        detail: 'Each change ships as soon as it is ready and signed off.'
       },
       {
-        value: 'gated',
-        label: 'Fixed release trains, approval gates, SOX-style controls',
-        detail: 'Promotion needs a named approver who is not the author.'
+        value: 'scheduled',
+        label: 'On planned release dates',
+        detail: 'Changes collect and ship together; scope is frozen per release.'
+      },
+      {
+        value: 'packages',
+        label: 'As versioned packages',
+        detail: 'A release is a new package version, installed org by org.'
       }
     ]
   }
@@ -117,17 +144,39 @@ const BLUEPRINTS = {
   },
   B2: {
     id: 'B2',
-    name: 'Multi-Team with Release Branches',
-    link: '/strategy/b2-multi-team-release-branches',
-    summary: 'A staged promotion chain with an explicit release decision at each gate.',
+    name: 'Multi-Team with Environment Branches',
+    link: '/strategy/b2-multi-team-environment-branches',
     environments: 'Integration + UAT + pre-production + production',
-    branches: '`integration` → `uat` → `preprod` → `main`, plus `feature/*` and `hotfix/*`',
-    switchOn: [
-      '`pr-validation.yml` on pull requests into all four major branches',
-      '`deployment.yml` per major branch, one GitHub Environment per org',
-      'Branch protection on all four; `integration` as the default branch',
-      'Budget check: Full and Developer Pro sandboxes are a paid add-on on Enterprise Edition'
-    ]
+    // The release style picks the variant - see variantFor().
+    variants: {
+      train: {
+        name: 'Release Train',
+        anchor: '#release-train',
+        summary:
+          'A staged promotion chain: the whole state moves stage by stage, with an explicit release decision at each gate.',
+        branches: '`integration` → `uat` → `preprod` → `main`, plus `feature/*` and `hotfix/*`',
+        switchOn: [
+          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`deployment.yml` per environment branch, full deployments, one GitHub Environment per org',
+          'Branch protection on all four; `integration` as the default branch',
+          'Budget check: Full and Developer Pro sandboxes are a paid add-on on Enterprise Edition'
+        ]
+      },
+      story: {
+        name: 'Story Promotion',
+        anchor: '#story-promotion',
+        summary:
+          'Every story travels on its own: merged into each stage through a short-lived promotion branch, and into production when it is signed off.',
+        branches:
+          'Environment branches `integration`, `uat`, `preprod`, `main`; `feature/*` from `main`, `promotion/*` per story and stage',
+        switchOn: [
+          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`deployment.yml` per environment branch as a delta from `github.event.before`, one GitHub Environment per org',
+          'A promotion workflow that opens its pull requests with a GitHub App token - `GITHUB_TOKEN` would skip the validation',
+          'Merge `main` back into every environment branch after each production deployment'
+        ]
+      }
+    }
   },
   B3: {
     id: 'B3',
@@ -154,7 +203,8 @@ const BLUEPRINTS = {
       '`deployment.yml` in a matrix, one GitHub Environment per production org',
       '`pr-validation.yml` once per region - a core change touches every org',
       '`sfdx-package-installation` with an explicit version pin per org',
-      'CODEOWNERS mapping the core and each org overlay to its team'
+      'CODEOWNERS mapping the core and each org overlay to its team',
+      'One team and repository per org instead? Run B2 once per org - see per-org environment chains'
     ]
   },
   B5: {
@@ -178,33 +228,47 @@ const cursor = ref(0);
 
 /** The questions worth asking, given what has been answered so far. */
 function stepsFor(a) {
-  const steps = ['teams'];
-  if (a.teams === 'one') {
-    steps.push('lowCode');
-  } else if (a.teams === 'several') {
-    steps.push('orgs');
-    if (a.orgs === 'single') steps.push('maturity');
+  const steps = ['orgs'];
+  if (a.orgs === 'single') {
+    steps.push('teams');
+    if (a.teams) steps.push('lowCode');
+    if (a.teams === 'several' && a.lowCode) {
+      steps.push('maturity');
+      // Packaging only becomes a question once the basics are in place.
+      if (a.maturity && a.maturity !== 'starting') steps.push('modularity');
+    }
   }
-  // Cadence never changes the blueprint, only the gates - ask it last, and only
-  // once the routing questions have actually produced a blueprint.
-  if (blueprintFor(a)) steps.push('cadence');
+  // The release style picks B2's variant and tailors every other result - ask it
+  // last, and only once the questions so far have produced a blueprint. Route on
+  // the answers that are part of the flow, so a stale one cannot produce a result.
+  const inFlow = Object.fromEntries(steps.filter((s) => a[s]).map((s) => [s, a[s]]));
+  if (blueprintFor(inFlow)) steps.push('release');
   return steps;
 }
 
 function blueprintFor(a) {
+  if (a.orgs === 'multi') return 'B4';
+  if (a.orgs !== 'single') return null;
   if (a.teams === 'one') {
     if (a.lowCode === 'lowCode') return 'B5';
     if (a.lowCode === 'proCode') return 'B1';
     return null;
   }
-  if (a.teams === 'several') {
-    if (a.orgs === 'multi') return 'B4';
-    if (a.orgs === 'single') {
-      if (a.maturity === 'high') return 'B3';
-      if (a.maturity === 'low') return 'B2';
-    }
+  if (a.teams === 'several' && a.lowCode) {
+    // Build style does not change the blueprint for several teams - it adds the
+    // tool-driven promotion note to the result instead.
+    if (a.maturity === 'starting') return 'B2';
+    if (a.modularity === 'modular') return 'B3';
+    if (a.modularity === 'monolith') return 'B2';
   }
   return null;
+}
+
+/** B2's variant follows the release style; versioned packages without modular
+ * metadata ship on release dates until B3 is in reach. */
+function variantFor(a) {
+  if (blueprintFor(a) !== 'B2' || !a.release) return null;
+  return a.release === 'continuous' ? 'story' : 'train';
 }
 
 const steps = computed(() => stepsFor(answers.value));
@@ -212,7 +276,11 @@ const currentStepId = computed(() => steps.value[cursor.value] ?? null);
 const currentStep = computed(() => (currentStepId.value ? QUESTIONS[currentStepId.value] : null));
 const blueprint = computed(() => {
   const id = blueprintFor(answers.value);
-  return id ? BLUEPRINTS[id] : null;
+  if (!id) return null;
+  const base = BLUEPRINTS[id];
+  const variant = base.variants?.[variantFor(answers.value)];
+  if (!variant) return base;
+  return { ...base, ...variant, name: `${base.name} · ${variant.name}`, link: base.link + variant.anchor };
 });
 const done = computed(() => steps.value.every((s) => answers.value[s]) && !!blueprint.value);
 const started = computed(() => Object.keys(answers.value).length > 0);
@@ -250,7 +318,7 @@ const HASH_KEY = 'strategy';
 
 function writeHash() {
   if (typeof window === 'undefined') return;
-  const order = ['teams', 'lowCode', 'orgs', 'maturity', 'cadence'];
+  const order = ['orgs', 'teams', 'lowCode', 'maturity', 'modularity', 'release'];
   const encoded = order
     .filter((k) => answers.value[k])
     .map((k) => `${k}:${answers.value[k]}`)
@@ -280,30 +348,22 @@ function readHash() {
 
 const diagram = ref(null);
 
-// Edge order below must match the order the links are declared in treeSource().
-const PATH_EDGES = {
-  'teams:one': 0,
-  'teams:several': 1,
-  'lowCode:lowCode': 2,
-  'lowCode:proCode': 3,
-  'orgs:multi': 4,
-  'orgs:single': 5,
-  'maturity:high': 6,
-  'maturity:low': 7
+// Edge indices follow the order the links are declared in treeSource().
+const EDGE = {
+  multiOrg: 0,
+  singleOrg: 1,
+  oneTeam: 2,
+  severalTeams: 3,
+  lowCode: 4,
+  proCode: 5,
+  modular: 6,
+  notModular: 7,
+  storyByStory: 8,
+  releaseDates: 9
 };
 
-const PATH_NODES = {
-  'teams:one': ['Q1', 'Q3'],
-  'teams:several': ['Q1', 'Q2'],
-  'lowCode:lowCode': ['B5'],
-  'lowCode:proCode': ['B1'],
-  'orgs:multi': ['B4'],
-  'orgs:single': ['Q4'],
-  'maturity:high': ['B3'],
-  'maturity:low': ['B2']
-};
-
-const ALL_NODES = ['Q1', 'Q2', 'Q3', 'Q4', 'B1', 'B2', 'B3', 'B4', 'B5'];
+const ALL_NODES = ['QO', 'QT', 'QL', 'QM', 'QR', 'B1', 'B2S', 'B2T', 'B3', 'B4', 'B5'];
+const ALL_EDGES = Object.values(EDGE);
 
 // Mermaid needs literal colors, so the brand tokens from theme/custom.css are
 // repeated here - keep the two in step when the palette changes. The dark
@@ -343,14 +403,37 @@ const PALETTE = {
   }
 };
 
-/** Nodes and edges traversed by the answers given so far. */
+/** Nodes and edges traversed by the answers given so far. Derived from the
+ * answers as a whole rather than looked up per answer: whether "level 2-3"
+ * leads on to B3 depends on the modularity answer as well. */
 function takenPath() {
+  const a = answers.value;
   const nodes = new Set();
   const edges = [];
-  for (const [k, v] of Object.entries(answers.value)) {
-    const key = `${k}:${v}`;
-    if (PATH_EDGES[key] !== undefined) edges.push(PATH_EDGES[key]);
-    for (const n of PATH_NODES[key] ?? []) nodes.add(n);
+  const take = (edge, node) => {
+    edges.push(edge);
+    nodes.add(node);
+  };
+  if (!a.orgs) return { nodes, edges };
+  nodes.add('QO');
+  if (a.orgs === 'multi') {
+    take(EDGE.multiOrg, 'B4');
+    return { nodes, edges };
+  }
+  take(EDGE.singleOrg, 'QT');
+  if (a.teams === 'one') {
+    take(EDGE.oneTeam, 'QL');
+    if (a.lowCode === 'lowCode') take(EDGE.lowCode, 'B5');
+    if (a.lowCode === 'proCode') take(EDGE.proCode, 'B1');
+  } else if (a.teams === 'several') {
+    take(EDGE.severalTeams, 'QM');
+    const id = blueprintFor(a);
+    if (id === 'B3') take(EDGE.modular, 'B3');
+    if (id === 'B2') {
+      take(EDGE.notModular, 'QR');
+      if (a.release === 'continuous') take(EDGE.storyByStory, 'B2S');
+      else if (a.release) take(EDGE.releaseDates, 'B2T');
+    }
   }
   return { nodes, edges };
 }
@@ -358,19 +441,25 @@ function takenPath() {
 function treeSource(isDark) {
   const c = isDark ? PALETTE.dark : PALETTE.light;
   const { nodes, edges } = takenPath();
-  const resultId = blueprintFor(answers.value);
+  // B2 is two leaves in the tree; until the release style picks one, the path
+  // ends at QR without a result.
+  const variant = variantFor(answers.value);
+  const id = blueprintFor(answers.value);
+  const resultId = id === 'B2' ? (variant ? (variant === 'story' ? 'B2S' : 'B2T') : null) : id;
 
   const lines = [
     'flowchart TD',
-    '    Q1{"How many teams or<br/>parallel workstreams?"}',
-    '    Q1 -->|One| Q3{"Mostly admins and<br/>low-code builders?"}',
-    '    Q1 -->|Several| Q2{"Single-org or<br/>multi-org?"}',
-    '    Q3 -->|Yes| B5["<b>B5</b><br/>Low-Code First"]',
-    '    Q3 -->|No| B1["<b>B1</b><br/>Simple Org Development"]',
-    '    Q2 -->|Multi-org| B4["<b>B4</b><br/>Multi-Org / Regional"]',
-    '    Q2 -->|Single-org| Q4{"Metadata modular enough<br/>for packages, maturity 3-4?"}',
-    '    Q4 -->|Yes| B3["<b>B3</b><br/>Package-Based / Modular"]',
-    '    Q4 -->|Not yet| B2["<b>B2</b><br/>Multi-Team with Release Branches"]',
+    '    QO{"How many<br/>production orgs?"}',
+    '    QO -->|Several| B4["<b>B4</b><br/>Multi-Org / Regional"]',
+    '    QO -->|One| QT{"How many teams or<br/>parallel workstreams?"}',
+    '    QT -->|One| QL{"Mostly admins and<br/>low-code builders?"}',
+    '    QT -->|Several| QM{"Level 2+ and metadata<br/>modular enough for packages?"}',
+    '    QL -->|Yes| B5["<b>B5</b><br/>Low-Code First"]',
+    '    QL -->|No| B1["<b>B1</b><br/>Simple Org Development"]',
+    '    QM -->|Yes| B3["<b>B3</b><br/>Package-Based / Modular"]',
+    '    QM -->|Not yet| QR{"Ship story by story<br/>or on release dates?"}',
+    '    QR -->|Story by story| B2S["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]',
+    '    QR -->|Release dates| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
     `    classDef neutral fill:${c.neutralFill},stroke:${c.neutralStroke},color:${c.neutralText};`,
     `    classDef active fill:${c.activeFill},stroke:${c.activeStroke},color:${c.activeText},stroke-width:2px;`,
     `    classDef result fill:${c.resultFill},stroke:${c.resultStroke},color:${c.resultText},stroke-width:2px,font-weight:bold;`,
@@ -386,8 +475,7 @@ function treeSource(isDark) {
     if (resultId) lines.push(`    class ${resultId} result;`);
     if (dim.length) lines.push(`    class ${dim.join(',')} dim;`);
 
-    const allEdges = [0, 1, 2, 3, 4, 5, 6, 7];
-    const off = allEdges.filter((e) => !edges.includes(e));
+    const off = ALL_EDGES.filter((e) => !edges.includes(e));
     if (edges.length) lines.push(`    linkStyle ${edges.join(',')} stroke:${c.activeLink},stroke-width:2.5px;`);
     if (off.length) lines.push(`    linkStyle ${off.join(',')} stroke:${c.dimLink},opacity:0.45;`);
   }
@@ -497,15 +585,33 @@ watch(
         <li v-for="item in blueprint.switchOn" :key="item">{{ item }}</li>
       </ul>
 
-      <p v-if="answers.cadence === 'gated'" class="wizard-note">
-        <strong>Because you release on fixed trains with approval gates:</strong> add <em>required reviewers</em> to
-        every GitHub Environment that fronts a production org, and make sure the approver is not the change's author.
-        That environment approval is the control an auditor will ask about.
+      <p v-if="answers.teams === 'several' && answers.maturity === 'starting'" class="wizard-note">
+        <strong>Because you are starting out:</strong> begin with two stages - <code>uat</code> and <code>main</code> -
+        and add <code>integration</code> and <code>preprod</code> once CI and delta deployments are routine. Four
+        long-lived branches at level 1 collapse under their own weight.
+      </p>
+      <p v-if="answers.teams === 'several' && answers.lowCode === 'lowCode'" class="wizard-note">
+        <strong>Because admins build most of the changes:</strong> keep this blueprint, but let tooling do the promoting
+        - nobody should have to resolve an XML conflict by hand - and adopt the
+        <a :href="withBase('/strategy/b5-low-code-admin-first#working-agreements')">working agreements of B5</a>.
+      </p>
+      <p v-if="answers.release === 'scheduled'" class="wizard-note">
+        <strong>Because you release on planned dates:</strong> decouple merging from releasing. Changes collect in front
+        of production and ship together on the date, behind a <em>production</em> GitHub Environment with required
+        reviewers. Freeze each release's scope with a branch or a tag, so the next one can keep moving.
+      </p>
+      <p v-else-if="answers.release === 'packages'" class="wizard-note">
+        <strong>Because you release versioned packages:</strong> a release is a promoted package version, not a merge.
+        Pin versions per org, and gate production installs behind a GitHub Environment with required reviewers.
+        <template v-if="blueprint.id !== 'B3' && blueprint.id !== 'B4'">
+          Packaging needs modular metadata - <a :href="withBase('/strategy/b3-package-based-modular')">B3</a> shows the
+          way there.
+        </template>
       </p>
       <p v-else class="wizard-note">
-        <strong>Because you release continuously:</strong> merging is the release decision, so the validation check has
-        to genuinely block. Keep a <em>production</em> GitHub Environment anyway - it costs nothing and gives you a
-        deployment history and a pause button.
+        <strong>Because you ship continuously:</strong> merging - or promoting a story to production - is the release
+        decision, so the validation check has to genuinely block. Keep a <em>production</em> GitHub Environment anyway:
+        it gives you a deployment history, a pause button and, with required reviewers, your approval gate.
       </p>
 
       <div class="wizard-cta">

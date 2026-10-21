@@ -57,7 +57,7 @@ Two long-lived branches, `uat` and `main`, each bound to an org. Work-item branc
 Either way, the admin's interface is a form, not a command line.
 
 ::: warning Two stages, deliberately
-This is an environment-branch model, which [Dimensions](dimensions.md#branching-models) warns about - and the warning holds. It is defensible here only because there are **two** stages, not four, and because tooling performs the promotions. If you find yourself adding a third org-bound branch, the model has outgrown its justification: move to [B1](b1-simple-org-development.md) if the team has learned Git, or to [B2](b2-multi-team-release-branches.md) if you genuinely need the gates.
+This is an environment-branch model, which [Dimensions](dimensions.md#branching-models) warns about - and the warning holds. It is defensible here only because there are **two** stages, not four, and because tooling performs the promotions. If you find yourself adding a third org-bound branch, the model has outgrown its justification: move to [B1](b1-simple-org-development.md) if the team has learned Git, or to [B2](b2-multi-team-environment-branches.md) if you genuinely need the gates.
 :::
 
 ## Promotion path & roles
@@ -163,7 +163,7 @@ Add required reviewers to the `production` environment. That approval is the rel
 
 **To [B1](b1-simple-org-development.md)** once enough of the team is comfortable with pull requests. Collapsing `uat` into a deployment gate on `main` removes a whole branch and its merge overhead - this is a simplification, and the most common next step.
 
-**To [B2](b2-multi-team-release-branches.md)** only if a second stream and a formal approval process appear together. Do not go there for the environments alone.
+**To [B2](b2-multi-team-environment-branches.md)** only if a second stream and a formal approval process appear together. Do not go there for the environments alone.
 
 **Signals you are ready to move:** admins opening their own pull requests, the pipeline owner no longer being the only one who resolves conflicts, and a growing share of pro-code work.
 
