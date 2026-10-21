@@ -28,7 +28,8 @@
     { "file": "pr-validation.yml", "example": "pr-validation.yml", "slug": "pr-validation" },
     { "file": "create-scratch-org.yml", "example": "create-scratch-org.yml", "slug": "create-scratch-org" },
     { "file": "scratch-org-ci.yml", "example": "scratch-org-ci.yml", "slug": "scratch-org-ci" },
-    { "file": "deployment.yml", "example": "deployment.yml", "slug": "deployment" }
+    { "file": "deployment.yml", "example": "deployment.yml", "slug": "deployment" },
+    { "file": "promote.yml", "example": "promote.yml", "slug": "promote" }
   ],
   "blockCategories": [
     {

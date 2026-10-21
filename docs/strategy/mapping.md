@@ -12,6 +12,7 @@ Each blueprint page carries the full, copy-pasteable callers. This page is the o
 | [`deployment.yml`](/workflows/deployment)                 |             on `main`              |               per env branch                | from `main` or a release tag |         per-org matrix         |       on `uat` and `main`        |
 | [`scratch-org-ci.yml`](/workflows/scratch-org-ci)         |              optional              |          optional, on `feature/*`           |     **gate for modules**     |            core CI             |                -                 |
 | [`create-scratch-org.yml`](/workflows/create-scratch-org) |              optional              |                  optional                   |         recommended          |          recommended           |           recommended            |
+| [`promote.yml`](/workflows/promote)                       |                 -                  |     story promotion and release bundle      |              -               |        B2 chain per org        |                -                 |
 
 ## Key input settings
 
@@ -71,7 +72,7 @@ Configure these under **Settings → Branches** for every long-lived branch in y
 
 This is what lets one reusable workflow serve every stage and every org. Create one environment per target org, store `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` in each, and use `secrets: inherit` in the caller.
 
-Only `deployment.yml` runs inside an environment. [`pr-validation.yml`](/workflows/pr-validation) and [`scratch-org-ci.yml`](/workflows/scratch-org-ci) read the **repository secrets**, so keep one set there as well - your validation org, or the Dev Hub for scratch orgs.
+[`pr-validation.yml`](/workflows/pr-validation) takes an `environment` input too, so validation can run against the org behind each target branch. Give it its own environment per org - for example `uat-validation` - with the same credentials but **no** required reviewers or branch restrictions, or every pull request waits for an approval. [`scratch-org-ci.yml`](/workflows/scratch-org-ci) reads the **repository secrets** of your Dev Hub.
 
 | Blueprint | Environments to create                                                           |
 | --------- | -------------------------------------------------------------------------------- |

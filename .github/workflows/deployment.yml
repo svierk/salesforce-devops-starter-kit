@@ -52,6 +52,11 @@ on:
         required: false
         type: string
         default: ''
+      ref:
+        description: Optional branch, tag or commit SHA to check out and deploy, e.g. an environment branch for a scheduled full validation, or a release tag. Leave empty to deploy the ref that triggered the workflow.
+        required: false
+        type: string
+        default: ''
     secrets:
       SFDX_CONSUMER_KEY:
         description: Consumer key (client ID) of the connected app used for the JWT flow.
@@ -79,6 +84,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
         with:
+          # Empty checks out the triggering ref, exactly as before this input existed.
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
           persist-credentials: false # the GITHUB_TOKEN is not needed after the checkout - don't leave it in .git/config
 

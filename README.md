@@ -157,6 +157,7 @@ For common scenarios you don't have to wire the blocks together yourself - call 
 | [create-scratch-org.yml](.github/workflows/create-scratch-org.yml) | Self-service scratch org provisioning: create → install packages → deploy → assign permissions → import data → run Apex → generate password |
 | [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml)         | Full scratch org lifecycle for CI: create → deploy → assign permissions → run Apex → test → delete                                          |
 | [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata to a sandbox or production org, with optional post-deploy Apex scripts                                                      |
+| [promote.yml](.github/workflows/promote.yml)                       | Prepare a promotion between environment branches as a pull request: story promotion, release bundles and the sync after a release           |
 
 Call one from your own repository like this:
 
@@ -169,7 +170,7 @@ permissions:
 
 jobs:
   pr-validation:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.3.0
     with:
       source-dir: force-app
     secrets:

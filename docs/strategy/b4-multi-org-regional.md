@@ -158,7 +158,7 @@ jobs:
       matrix:
         # "all" fans out to every org; a single region rolls out on its own
         region: ${{ fromJSON(inputs.region == 'all' && '["eu","na","apac"]' || format('["{0}"]', inputs.region)) }}
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.3.0
     with:
       source-dir: orgs/${{ matrix.region }}
       target-org-alias: ${{ matrix.region }}-production
@@ -171,7 +171,7 @@ jobs:
 Store each org's `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` as environment secrets and add that region's release manager as a required reviewer. `secrets: inherit` then resolves the right org per matrix leg, and no credential is ever visible to another region's job.
 :::
 
-**Validate against every affected org.** A core change touches all of them, and a check-only delta deployment into each org's sandbox catches the region whose local configuration conflicts with the core change - the failure this blueprint exists to survive. [`pr-validation.yml`](/workflows/pr-validation) does not run inside a GitHub Environment, so it cannot pick up per-org environment secrets: add one validation job per region and pass that region's sandbox credentials explicitly through its `secrets:` block.
+**Validate against every affected org.** A core change touches all of them, and a check-only delta deployment into each org's sandbox catches the region whose local configuration conflicts with the core change - the failure this blueprint exists to survive. Run [`pr-validation.yml`](/workflows/pr-validation) as a matrix with `environment: ${{ format('{0}-validation', matrix.region) }}` - one validation environment per region, holding that region's sandbox credentials, without required reviewers.
 
 **Distribute the core with** [`sfdx-package-installation`](https://github.com/svierk/sfdx-package-installation), pinning an explicit version per org rather than "latest". The pin is what makes independent adoption real.
 

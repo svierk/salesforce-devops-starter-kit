@@ -125,7 +125,7 @@ permissions:
 
 jobs:
   ci:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.3.0
     with:
       source-dir: force-app
       definition-file: config/project-scratch-def.json

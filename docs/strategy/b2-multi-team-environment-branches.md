@@ -242,13 +242,13 @@ Grant merge rights on `uat`, `preprod` and `main` to the release manager role on
 - **Release train: do not test large features directly in `preprod`.** It blocks the RUN stream and skips the UAT gate.
 - **Story promotion: what you tested is not byte for byte what you ship.** Each stage resolves its own conflicts, so `uat` and `main` can differ in more than the stories they hold. The sync after every release keeps that gap small; skipping it makes it grow.
 - **Story promotion: dependent stories need a rule.** If story B builds on story A, promoting B alone breaks the stage. Once a dependency is known, combine the two into one feature branch and promote them together - "promote A first" fails as soon as A is held back.
-- **Story promotion and release bundle: deltas hide gaps.** Every stage only ever receives deltas, and a delta can pass where a full deployment of the same branch would fail - a deleted picklist value that is still referenced, for example. Run a full check-only deployment of every environment branch into its org regularly - weekly is enough. With the kit, that is a `workflow_dispatch` caller of [`deployment.yml`](/workflows/deployment) with `dry-run: true` and `delta: false`, started from each environment branch in the Actions tab.
+- **Story promotion and release bundle: deltas hide gaps.** Every stage only ever receives deltas, and a delta can pass where a full deployment of the same branch would fail - a deleted picklist value that is still referenced, for example. Run a full check-only deployment of every environment branch into its org regularly - weekly is enough. The [weekly full validation](#kit-mapping) under Kit mapping does exactly that.
 - **Release bundle: stories are merged twice.** Once per stage up to `uat`, then again into the release branch - conflicts can need solving at both points. Small, independent stories keep that cheap.
-- **Story promotion: do not promote by hand at scale.** Four promotion branches per story is toil. Automate the steps above, and see the caveat under Kit mapping.
+- **Story promotion: do not promote by hand at scale.** Four promotion branches per story is toil. Let [`promote.yml`](/workflows/promote) do it - see Kit mapping.
 
 ## Kit mapping
 
-**Validation on every environment branch** - [`pr-validation.yml`](/workflows/pr-validation) as a required check for pull requests into all four, with delta validation. In story promotion, these are the pull requests from the promotion branches - each one validates the story merged with that stage's state:
+**Validation on every environment branch** - [`pr-validation.yml`](/workflows/pr-validation) as a required check for pull requests into all four, with delta validation against the org behind the target branch. In story promotion, these are the pull requests from the promotion branches - each one validates the story merged with that stage's state, in that stage's org:
 
 ```yaml
 name: PR Validation
@@ -263,18 +263,16 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.3.0
     with:
       source-dir: force-app
       test-level: RunLocalTests
       delta: true
       severity-threshold: '3'
-    secrets:
-      # Repository secrets: pr-validation does not run inside a GitHub
-      # Environment, so every pull request validates against one org
-      SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
-      SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
-      SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
+      # integration-validation | uat-validation | preprod-validation |
+      # main-validation - the org behind the target branch, see below
+      environment: ${{ format('{0}-validation', github.base_ref) }}
+    secrets: inherit
 ```
 
 **One deployment per environment branch** - [`deployment.yml`](/workflows/deployment), triggered on push, with a GitHub Environment per org. The environment carries both the approval rules and the org's credentials, so the same reusable workflow serves all four stages:
@@ -291,7 +289,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.1.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.3.0
     with:
       source-dir: force-app
       target-org-alias: ${{ github.ref_name }}
@@ -314,10 +312,53 @@ For **story promotion** and the **release bundle**, deploy the delta of each mer
 ::: tip One secret set per org
 Create four GitHub Environments and store `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` as environment secrets in each. `secrets: inherit` then resolves the right org automatically, and adding a stage never means editing the caller. Add required reviewers to `preprod` and `production` for the approval gate.
 
-Environment secrets only reach the deployments. The PR validation above reads the repository secrets, so store the credentials of the org you validate against there - typically the integration sandbox.
+Validation needs a twin per branch - `integration-validation`, `uat-validation`, `preprod-validation`, `main-validation` - with the same three secrets but **no** required reviewers and no branch restrictions. A protected environment would hold every pull request until someone approves it, or reject it outright.
 :::
 
-**Automating story promotion.** The kit has no promotion workflow yet, so the four steps above run in your own workflow or by hand. If you automate them with GitHub Actions, note that a pull request opened with the default `GITHUB_TOKEN` does **not** trigger other workflows - the PR Validation would never run. Open the pull request with a GitHub App token instead.
+**Promotions as a form in the Actions tab** - [`promote.yml`](/workflows/promote) runs the steps above: it cuts the promotion branch, merges the story and opens the pull request into the stage. The same workflow cuts a release bundle and opens the sync pull requests after a release - the [example caller](/workflows/promote#example-usage) shows all three. A conflict stops the run, and its summary lists the files and the commands to finish the promotion locally.
+
+```yaml
+jobs:
+  promote:
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.3.0
+    with:
+      target: uat
+      sources: feature/story-123
+    secrets:
+      PROMOTION_APP_ID: ${{ secrets.PROMOTION_APP_ID }}
+      PROMOTION_APP_PRIVATE_KEY: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+```
+
+Install a GitHub App with contents and pull request write access and pass its credentials: a pull request opened with the default `GITHUB_TOKEN` does **not** trigger other workflows, so the PR validation would never run on it.
+
+**Weekly full validation** (story promotion and release bundle) - [`deployment.yml`](/workflows/deployment) as a check-only, full deployment of every environment branch into its org. The `ref` input checks out each branch, so one scheduled caller covers all of them:
+
+```yaml
+name: Weekly Full Validation
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [integration, uat, preprod, main]
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.3.0
+    with:
+      ref: ${{ matrix.branch }}
+      target-org-alias: ${{ matrix.branch }}
+      dry-run: true
+      delta: false
+      environment: ${{ format('{0}-validation', matrix.branch) }}
+    secrets: inherit
+```
 
 **Branch protection on all four environment branches:**
 

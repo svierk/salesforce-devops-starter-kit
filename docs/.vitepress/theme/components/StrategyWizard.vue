@@ -202,7 +202,7 @@ const BLUEPRINTS = {
           'A staged promotion chain: the whole state moves stage by stage, with an explicit release decision at each gate.',
         branches: '`integration` → `uat` → `preprod` → `main`, plus `feature/*` and `hotfix/*`',
         switchOn: [
-          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`pr-validation.yml` on pull requests into all four environment branches, each against its own org',
           '`deployment.yml` per environment branch, full deployments, one GitHub Environment per org',
           'Branch protection on all four; `integration` as the default branch',
           'Budget check: Full and Developer Pro sandboxes are a paid add-on on Enterprise Edition'
@@ -216,10 +216,10 @@ const BLUEPRINTS = {
         branches:
           'Environment branches `integration`, `uat`, `preprod`, `main`; `feature/*` from `main`, `promotion/*` per story and stage',
         switchOn: [
-          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`promote.yml` for every promotion, with a GitHub App so the pull request validation starts',
+          '`pr-validation.yml` on pull requests into all four environment branches, each against its own org',
           '`deployment.yml` per environment branch as a delta from `github.event.before`, one GitHub Environment per org',
-          'A promotion workflow that opens its pull requests with a GitHub App token - `GITHUB_TOKEN` would skip the validation',
-          'Merge `main` back into every environment branch after each production deployment'
+          'Sync `main` back into every environment branch after each production deployment - `promote.yml` opens those pull requests'
         ]
       },
       bundle: {
@@ -230,10 +230,10 @@ const BLUEPRINTS = {
         branches:
           'Environment branches `integration`, `uat`, `preprod`, `main`; `feature/*` and `promotion/*` up to UAT, one `release/*` branch per date from there',
         switchOn: [
-          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`pr-validation.yml` on pull requests into all four environment branches, each against its own org',
           '`deployment.yml` per environment branch as a delta from `github.event.before`, one GitHub Environment per org',
-          'A release branch per date: cut from `main`, signed-off stories merged in, promoted to `preprod` and `main`',
-          'Merge `main` back into every environment branch after each production deployment'
+          '`promote.yml` cuts a release branch from `main` per date, merges the signed-off stories and opens the pull requests into `preprod` and `main`',
+          'Sync `main` back into every environment branch after each production deployment - `promote.yml` opens those pull requests'
         ]
       }
     }
