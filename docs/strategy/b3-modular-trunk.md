@@ -12,7 +12,7 @@ Packaging is a means, not the goal. The goal is modular metadata with explicit d
 | **Environments**  | Scratch orgs or developer sandboxes for development and CI + one staging sandbox + production       |
 | **Branch model**  | Trunk-based: `main` plus short-lived feature branches, feature-flagged                              |
 | **Release style** | Any - continuously, or a tagged state of `main` on a release date                                   |
-| **Maturity**      | Level 4 - or level 2-3 with metadata that is already modular                                        |
+| **Maturity**      | Level 4 - modular metadata helps, but is not the entry ticket                                       |
 | **Prerequisites** | A validation gate that genuinely blocks, a feature-flag convention, and a home for org-level config |
 
 ## What you ship

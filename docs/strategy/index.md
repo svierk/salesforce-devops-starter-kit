@@ -16,7 +16,7 @@ A blueprint is a starting point, not an identity. Every blueprint page ends with
 
 ## Find your blueprint
 
-A handful of questions, one at a time - the questionnaire only asks what can still change your result. Your path lights up in the decision tree as you go, and the result carries a link you can paste into a ticket.
+A handful of questions, one at a time - always the same ones, so every path has the same length. Your path lights up in the decision tree as you go, and the result carries a link you can paste into a ticket.
 
 <ClientOnly>
   <StrategyWizard />
@@ -29,25 +29,32 @@ The questionnaire above is interactive on the [documentation site](https://svier
 
 ```mermaid
 flowchart TD
-    QO{"How many<br/>production orgs?"}
-    QO -->|Several| B4["<b>B4</b><br/>Multi-Org / Regional"]
-    QO -->|One| QT{"How many teams or<br/>parallel workstreams?"}
-
-    QT -->|One| QL{"Mostly admins and<br/>low-code builders?"}
-    QT -->|Several| QM{"Level 4, or level 2-3<br/>with modular metadata?"}
-
-    QL -->|Yes| B5["<b>B5</b><br/>Low-Code First"]
-    QL -->|No| B1["<b>B1</b><br/>Simple Org Development"]
-
-    QM -->|Yes| B3["<b>B3</b><br/>Modular Trunk"]
-    QM -->|Not yet| QR{"How do you ship<br/>to production?"}
-
+    QO{"How many<br/>production orgs?"} -->|One| QT{"How many teams or<br/>parallel workstreams?"}
+    QO -->|Several| P2M(( ))
+    QT -->|One| QS{"How is the<br/>team set up?"}
+    QT -->|Several| P3N(( ))
+    P2M --> P3M(( ))
+    QS -->|Developers / balanced| P4B1(( ))
+    QS -->|Low-code| P4B5(( ))
+    P3N --> QM{"How mature is your<br/>DevOps practice?"}
+    P3M --> P4M(( ))
+    P4B1 --> P5B1(( ))
+    P4B5 --> P5B5(( ))
+    QM -->|Level 1-3| QR{"How do you ship<br/>to production?"}
+    QM -->|Level 4| P5B3(( ))
+    P4M --> P5M(( ))
+    P5B1 --> B1["<b>B1</b><br/>Simple Org Development"]
+    P5B5 --> B5["<b>B5</b><br/>Low-Code First"]
     QR -->|Story by story| B2S["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]
     QR -->|Bundled from UAT| B2B["<b>B2</b><br/>Environment Branches<br/>· Release Bundle"]
     QR -->|Whole releases| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]
+    P5B3 --> B3["<b>B3</b><br/>Modular Trunk"]
+    P5M --> B4["<b>B4</b><br/>Multi-Org / Regional"]
 
     classDef bp fill:#dde4f9,stroke:#1d4ed8,color:#0b1a4a,font-weight:bold;
+    classDef pass fill:#9aa0a6,stroke:#9aa0a6;
     class B1,B2S,B2B,B2T,B3,B4,B5 bp;
+    class P2M,P3N,P3M,P4B1,P4B5,P4M,P5B1,P5B5,P5B3,P5M pass;
 ```
 
 </details>
@@ -58,13 +65,13 @@ Take the simpler one. Adding a long-lived branch later is far cheaper than unwin
 
 ## The five blueprints
 
-| Blueprint                                                                            | Fits when                                                             | Org landscape                              | Branch model                                                                         |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
-| [**B1** Simple Org Development](b1-simple-org-development.md)                        | One team, one production org, getting started                         | 1 developer sandbox + production           | GitHub Flow (`main` + `feature/*`)                                                   |
-| [**B2** Multi-Team with Environment Branches](b2-multi-team-environment-branches.md) | Several streams, one production org, approval gates                   | Integration + UAT + PreProd + production   | One branch per org - stories promoted one by one, as a bundle, or as a release train |
-| [**B3** Modular Trunk](b3-modular-trunk.md)                                          | Several teams ready for one trunk: high maturity, or modular metadata | Scratch orgs + few sandboxes               | Trunk-based, feature flags; modules or packages as artifacts                         |
-| [**B4** Multi-Org / Regional Rollout](b4-multi-org-regional.md)                      | Several production orgs by region or business unit                    | One org (chain) per region/BU, shared core | Trunk + per-org release branches, or a B2 chain per org                              |
-| [**B5** Low-Code First](b5-low-code-admin-first.md)                                  | Admin-heavy team, Git knowledge is the bottleneck                     | Dev + UAT + production, heavy automation   | Simplified environment branches, tool-driven                                         |
+| Blueprint                                                                            | Fits when                                           | Org landscape                              | Branch model                                                                         |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| [**B1** Simple Org Development](b1-simple-org-development.md)                        | One team, one production org, getting started       | 1 developer sandbox + production           | GitHub Flow (`main` + `feature/*`)                                                   |
+| [**B2** Multi-Team with Environment Branches](b2-multi-team-environment-branches.md) | Several streams, one production org, approval gates | Integration + UAT + PreProd + production   | One branch per org - stories promoted one by one, as a bundle, or as a release train |
+| [**B3** Modular Trunk](b3-modular-trunk.md)                                          | Several teams on one trunk, maturity level 4        | Scratch orgs + few sandboxes               | Trunk-based, feature flags; modules or packages as artifacts                         |
+| [**B4** Multi-Org / Regional Rollout](b4-multi-org-regional.md)                      | Several production orgs by region or business unit  | One org (chain) per region/BU, shared core | Trunk + per-org release branches, or a B2 chain per org                              |
+| [**B5** Low-Code First](b5-low-code-admin-first.md)                                  | Admin-heavy team, Git knowledge is the bottleneck   | Dev + UAT + production, heavy automation   | Simplified environment branches, tool-driven                                         |
 
 ## How to read a blueprint page
 

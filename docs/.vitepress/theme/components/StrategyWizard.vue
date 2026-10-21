@@ -48,15 +48,20 @@ const QUESTIONS = {
       }
     ]
   },
-  lowCode: {
-    label: 'Build style',
-    title: 'Who builds most of the changes?',
-    why: 'Salesforce is unusual in that much of the change is made by clicking, by people for whom a rebase is not a reasonable ask. If that is your team, the strategy has to hide Git rather than expose it.',
+  setup: {
+    label: 'Team setup',
+    title: 'How is the team set up?',
+    why: 'Salesforce is unusual in that much of the change is made by clicking, by people for whom a rebase is not a reasonable ask. The more of your team works that way, the more the strategy has to hide Git rather than expose it.',
     options: [
       {
-        value: 'proCode',
+        value: 'developers',
         label: 'Mostly developers, comfortable with Git',
         detail: 'Pull requests and branches can be everyone’s interface.'
+      },
+      {
+        value: 'balanced',
+        label: 'Balanced, cross-functional',
+        detail: 'Developers and admins side by side; Git works if tooling bridges the gap.'
       },
       {
         value: 'lowCode',
@@ -68,7 +73,7 @@ const QUESTIONS = {
   maturity: {
     label: 'Maturity',
     title: 'How mature is your DevOps practice?',
-    why: 'Maturity caps how many environments you can operate. Counter-intuitively, higher maturity means fewer long-lived branches, not more.',
+    why: 'Maturity caps how many environments you can operate, and decides whether several teams can share one trunk. Counter-intuitively, higher maturity means fewer long-lived branches, not more.',
     options: [
       {
         value: 'starting',
@@ -84,23 +89,6 @@ const QUESTIONS = {
         value: 'advanced',
         label: 'Level 4 - advanced',
         detail: 'Trunk-based or near it, feature flags, delivery metrics tracked and improving.'
-      }
-    ]
-  },
-  modularity: {
-    label: 'Modularity',
-    title: 'Is your metadata modular enough for packages?',
-    why: 'Packaging is what removes long-lived branches. It needs metadata that genuinely factors apart in practice - not just on a whiteboard.',
-    options: [
-      {
-        value: 'modular',
-        label: 'Yes - it splits into separable parts',
-        detail: 'Clear module boundaries and explicit dependencies between them.'
-      },
-      {
-        value: 'monolith',
-        label: 'Not yet - one happy soup',
-        detail: 'Everything references everything; staged promotion is the realistic model.'
       }
     ]
   },
@@ -241,42 +229,25 @@ const BLUEPRINTS = {
 const answers = ref({});
 const cursor = ref(0);
 
-/** The questions worth asking, given what has been answered so far. */
-function stepsFor(a) {
-  const steps = ['orgs'];
-  if (a.orgs === 'single') {
-    steps.push('teams');
-    if (a.teams) steps.push('lowCode');
-    if (a.teams === 'several' && a.lowCode) {
-      steps.push('maturity');
-      // Packaging only becomes a question once the basics are in place.
-      if (a.maturity && a.maturity !== 'starting') steps.push('modularity');
-    }
-  }
-  // The release style picks B2's variant and tailors every other result - ask it
-  // last, and only once the questions so far have produced a blueprint. Route on
-  // the answers that are part of the flow, so a stale one cannot produce a result.
-  const inFlow = Object.fromEntries(steps.filter((s) => a[s]).map((s) => [s, a[s]]));
-  if (blueprintFor(inFlow)) steps.push('release');
-  return steps;
-}
+// Every question is always asked, in this order, so every path through the tree
+// has the same length. An answer that cannot change the blueprint on a path
+// still tailors its result.
+const STEPS = ['orgs', 'teams', 'setup', 'maturity', 'release'];
 
 function blueprintFor(a) {
   if (a.orgs === 'multi') return 'B4';
   if (a.orgs !== 'single') return null;
   if (a.teams === 'one') {
-    if (a.lowCode === 'lowCode') return 'B5';
-    if (a.lowCode === 'proCode') return 'B1';
+    if (a.setup === 'lowCode') return 'B5';
+    if (a.setup) return 'B1';
     return null;
   }
-  if (a.teams === 'several' && a.lowCode) {
-    // Build style does not change the blueprint for several teams - it adds the
-    // tool-driven promotion note to the result instead.
-    if (a.maturity === 'starting') return 'B2';
-    // Level 4 already works trunk-based; modularity only decides the artifact.
+  if (a.teams === 'several' && a.setup) {
+    // Team setup does not change the blueprint for several teams - it adds a
+    // note on tool-driven promotion to the result instead. Level 4 already
+    // works trunk-based; modularity only decides what B3 ships.
     if (a.maturity === 'advanced') return 'B3';
-    if (a.modularity === 'modular') return 'B3';
-    if (a.modularity === 'monolith') return 'B2';
+    if (a.maturity) return 'B2';
   }
   return null;
 }
@@ -287,8 +258,8 @@ function variantFor(a) {
   return { continuous: 'story', bundled: 'bundle', scheduled: 'train' }[a.release] ?? null;
 }
 
-const steps = computed(() => stepsFor(answers.value));
-const currentStepId = computed(() => steps.value[cursor.value] ?? null);
+const steps = computed(() => STEPS);
+const currentStepId = computed(() => STEPS[cursor.value] ?? null);
 const currentStep = computed(() => (currentStepId.value ? QUESTIONS[currentStepId.value] : null));
 const blueprint = computed(() => {
   const id = blueprintFor(answers.value);
@@ -298,18 +269,20 @@ const blueprint = computed(() => {
   if (!variant) return base;
   return { ...base, ...variant, name: `${base.name} · ${variant.name}`, link: base.link + variant.anchor };
 });
-const done = computed(() => steps.value.every((s) => answers.value[s]) && !!blueprint.value);
+const done = computed(() => STEPS.every((s) => answers.value[s]) && !!blueprint.value);
 const started = computed(() => Object.keys(answers.value).length > 0);
 
+/** The first question still open, or past the end once all are answered. */
+function firstOpenStep() {
+  const i = STEPS.findIndex((s) => !answers.value[s]);
+  return i === -1 ? STEPS.length : i;
+}
+
 function choose(stepId, value) {
-  const next = { ...answers.value, [stepId]: value };
-  // Changing an earlier answer can remove later questions from the flow - drop
-  // any answer that is no longer part of it, so a stale one can never leak into
-  // the result.
-  const valid = stepsFor(next);
-  answers.value = Object.fromEntries(Object.entries(next).filter(([k]) => valid.includes(k)));
-  const firstUnanswered = valid.findIndex((s) => !answers.value[s]);
-  cursor.value = firstUnanswered === -1 ? valid.length : firstUnanswered;
+  // All questions stay in the flow, so changing an earlier answer keeps the
+  // later ones - the result is simply recalculated.
+  answers.value = { ...answers.value, [stepId]: value };
+  cursor.value = firstOpenStep();
 }
 
 function back() {
@@ -317,7 +290,7 @@ function back() {
 }
 
 function jumpTo(stepId) {
-  const i = steps.value.indexOf(stepId);
+  const i = STEPS.indexOf(stepId);
   if (i >= 0) cursor.value = i;
 }
 
@@ -334,9 +307,7 @@ const HASH_KEY = 'strategy';
 
 function writeHash() {
   if (typeof window === 'undefined') return;
-  const order = ['orgs', 'teams', 'lowCode', 'maturity', 'modularity', 'release'];
-  const encoded = order
-    .filter((k) => answers.value[k])
+  const encoded = STEPS.filter((k) => answers.value[k])
     .map((k) => `${k}:${answers.value[k]}`)
     .join(',');
   const url = new URL(window.location.href);
@@ -354,33 +325,61 @@ function readHash() {
     // Only accept values this wizard actually defines - the hash is user input.
     if (QUESTIONS[k]?.options.some((o) => o.value === v)) parsed[k] = v;
   }
-  const valid = stepsFor(parsed);
-  answers.value = Object.fromEntries(Object.entries(parsed).filter(([k]) => valid.includes(k)));
-  const firstUnanswered = valid.findIndex((s) => !answers.value[s]);
-  cursor.value = firstUnanswered === -1 ? valid.length : firstUnanswered;
+  answers.value = parsed;
+  cursor.value = firstOpenStep();
 }
 
 /* ---------- Decision tree with the taken path highlighted ----------------- */
 
 const diagram = ref(null);
 
-// Edge indices follow the order the links are declared in treeSource().
-const EDGE = {
-  multiOrg: 0,
-  singleOrg: 1,
-  oneTeam: 2,
-  severalTeams: 3,
-  lowCode: 4,
-  proCode: 5,
-  modular: 6,
-  notModular: 7,
-  storyByStory: 8,
-  bundled: 9,
-  wholeReleases: 10
+// The tree has one level per question and every path crosses all of them, so
+// all results sit on the bottom level. Where an answer cannot change the
+// blueprint on a path, the path runs through a small pass-through node (P…)
+// instead of a question. Edge indices follow the order the links are declared
+// in TREE below - linkStyle addresses edges by that index.
+const TREE = [
+  ['QO', 'QT', 'One'],
+  ['QO', 'P2M', 'Several'],
+  ['QT', 'QS', 'One'],
+  ['QT', 'P3N', 'Several'],
+  ['P2M', 'P3M'],
+  ['QS', 'P4B1', 'Developers / balanced'],
+  ['QS', 'P4B5', 'Low-code'],
+  ['P3N', 'QM'],
+  ['P3M', 'P4M'],
+  ['P4B1', 'P5B1'],
+  ['P4B5', 'P5B5'],
+  ['QM', 'QR', 'Level 1-3'],
+  ['QM', 'P5B3', 'Level 4'],
+  ['P4M', 'P5M'],
+  ['P5B1', 'B1'],
+  ['P5B5', 'B5'],
+  ['QR', 'B2S', 'Story by story'],
+  ['QR', 'B2B', 'Bundled from UAT'],
+  ['QR', 'B2T', 'Whole releases'],
+  ['P5B3', 'B3'],
+  ['P5M', 'B4']
+];
+
+const TREE_NODES = {
+  QO: '{"How many<br/>production orgs?"}',
+  QT: '{"How many teams or<br/>parallel workstreams?"}',
+  QS: '{"How is the<br/>team set up?"}',
+  QM: '{"How mature is your<br/>DevOps practice?"}',
+  QR: '{"How do you ship<br/>to production?"}',
+  B1: '["<b>B1</b><br/>Simple Org Development"]',
+  B5: '["<b>B5</b><br/>Low-Code First"]',
+  B2S: '["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]',
+  B2B: '["<b>B2</b><br/>Environment Branches<br/>· Release Bundle"]',
+  B2T: '["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
+  B3: '["<b>B3</b><br/>Modular Trunk"]',
+  B4: '["<b>B4</b><br/>Multi-Org / Regional"]'
 };
 
-const ALL_NODES = ['QO', 'QT', 'QL', 'QM', 'QR', 'B1', 'B2S', 'B2B', 'B2T', 'B3', 'B4', 'B5'];
-const ALL_EDGES = Object.values(EDGE);
+const ALL_NODES = [...new Set(TREE.flatMap(([from, to]) => [from, to]))];
+const PASS_NODES = ALL_NODES.filter((n) => n.startsWith('P'));
+const ALL_EDGES = TREE.map((_, i) => i);
 
 // Mermaid needs literal colors, so the brand tokens from theme/custom.css are
 // repeated here - keep the two in step when the palette changes. The dark
@@ -420,79 +419,100 @@ const PALETTE = {
   }
 };
 
-/** Nodes and edges traversed by the answers given so far. Derived from the
- * answers as a whole rather than looked up per answer: whether "level 2-3"
- * leads on to B3 depends on the modularity answer as well. */
-function takenPath() {
-  const a = answers.value;
-  const nodes = new Set();
-  const edges = [];
-  const take = (edge, node) => {
-    edges.push(edge);
-    nodes.add(node);
-  };
-  if (!a.orgs) return { nodes, edges };
-  nodes.add('QO');
+/** The nodes the answers given so far lead through, one per answered question,
+ * starting at the root. Questions are answered in order, so the walk stops at
+ * the first one still open. */
+function pathNodes(a) {
+  const nodes = ['QO'];
+  if (!a.orgs) return nodes;
   if (a.orgs === 'multi') {
-    take(EDGE.multiOrg, 'B4');
-    return { nodes, edges };
-  }
-  take(EDGE.singleOrg, 'QT');
-  if (a.teams === 'one') {
-    take(EDGE.oneTeam, 'QL');
-    if (a.lowCode === 'lowCode') take(EDGE.lowCode, 'B5');
-    if (a.lowCode === 'proCode') take(EDGE.proCode, 'B1');
-  } else if (a.teams === 'several') {
-    take(EDGE.severalTeams, 'QM');
-    const id = blueprintFor(a);
-    if (id === 'B3') take(EDGE.modular, 'B3');
-    if (id === 'B2') {
-      take(EDGE.notModular, 'QR');
-      if (a.release === 'continuous') take(EDGE.storyByStory, 'B2S');
-      if (a.release === 'bundled') take(EDGE.bundled, 'B2B');
-      if (a.release === 'scheduled') take(EDGE.wholeReleases, 'B2T');
+    nodes.push('P2M');
+    for (const [step, node] of [
+      ['teams', 'P3M'],
+      ['setup', 'P4M'],
+      ['maturity', 'P5M'],
+      ['release', 'B4']
+    ]) {
+      if (!a[step]) return nodes;
+      nodes.push(node);
     }
+    return nodes;
   }
-  return { nodes, edges };
+  nodes.push('QT');
+  if (!a.teams) return nodes;
+  if (a.teams === 'one') {
+    nodes.push('QS');
+    if (!a.setup) return nodes;
+    const [p4, p5, result] = a.setup === 'lowCode' ? ['P4B5', 'P5B5', 'B5'] : ['P4B1', 'P5B1', 'B1'];
+    nodes.push(p4);
+    if (a.maturity) nodes.push(p5);
+    if (a.maturity && a.release) nodes.push(result);
+    return nodes;
+  }
+  nodes.push('P3N');
+  if (!a.setup) return nodes;
+  nodes.push('QM');
+  if (!a.maturity) return nodes;
+  if (a.maturity === 'advanced') {
+    nodes.push('P5B3');
+    if (a.release) nodes.push('B3');
+    return nodes;
+  }
+  nodes.push('QR');
+  if (a.release) nodes.push({ continuous: 'B2S', bundled: 'B2B', scheduled: 'B2T' }[a.release]);
+  return nodes;
+}
+
+/** Nodes and edges traversed by the answers given so far. */
+function takenPath() {
+  const path = pathNodes(answers.value);
+  const edges = [];
+  for (let i = 1; i < path.length; i++) {
+    edges.push(TREE.findIndex(([from, to]) => from === path[i - 1] && to === path[i]));
+  }
+  // Before the first answer nothing is taken - not even the root.
+  return { nodes: new Set(path.length > 1 ? path : []), edges, last: path[path.length - 1] };
 }
 
 function treeSource(isDark) {
   const c = isDark ? PALETTE.dark : PALETTE.light;
-  const { nodes, edges } = takenPath();
-  // B2 is two leaves in the tree; until the release style picks one, the path
-  // ends at QR without a result.
-  const variant = variantFor(answers.value);
-  const id = blueprintFor(answers.value);
-  const resultId = id === 'B2' ? ({ story: 'B2S', bundle: 'B2B', train: 'B2T' }[variant] ?? null) : id;
+  const { nodes, edges, last } = takenPath();
+  // The result lights up only once every question is answered.
+  const resultId = done.value ? last : null;
 
+  const declared = new Set();
+  const node = (id) => {
+    if (declared.has(id)) return id;
+    declared.add(id);
+    return id + (id.startsWith('P') ? '(( ))' : TREE_NODES[id]);
+  };
   const lines = [
     'flowchart TD',
-    '    QO{"How many<br/>production orgs?"}',
-    '    QO -->|Several| B4["<b>B4</b><br/>Multi-Org / Regional"]',
-    '    QO -->|One| QT{"How many teams or<br/>parallel workstreams?"}',
-    '    QT -->|One| QL{"Mostly admins and<br/>low-code builders?"}',
-    '    QT -->|Several| QM{"Level 4, or level 2-3<br/>with modular metadata?"}',
-    '    QL -->|Yes| B5["<b>B5</b><br/>Low-Code First"]',
-    '    QL -->|No| B1["<b>B1</b><br/>Simple Org Development"]',
-    '    QM -->|Yes| B3["<b>B3</b><br/>Modular Trunk"]',
-    '    QM -->|Not yet| QR{"How do you ship<br/>to production?"}',
-    '    QR -->|Story by story| B2S["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]',
-    '    QR -->|Bundled from UAT| B2B["<b>B2</b><br/>Environment Branches<br/>· Release Bundle"]',
-    '    QR -->|Whole releases| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
+    ...TREE.map(([from, to, label]) => `    ${node(from)} ${label ? `-->|${label}|` : '-->'} ${node(to)}`),
     `    classDef neutral fill:${c.neutralFill},stroke:${c.neutralStroke},color:${c.neutralText};`,
     `    classDef active fill:${c.activeFill},stroke:${c.activeStroke},color:${c.activeText},stroke-width:2px;`,
     `    classDef result fill:${c.resultFill},stroke:${c.resultStroke},color:${c.resultText},stroke-width:2px,font-weight:bold;`,
-    `    classDef dim fill:${c.dimFill},stroke:${c.dimStroke},color:${c.dimText};`
+    `    classDef dim fill:${c.dimFill},stroke:${c.dimStroke},color:${c.dimText};`,
+    `    classDef pass fill:${c.neutralStroke},stroke:${c.neutralStroke};`,
+    `    classDef passActive fill:${c.activeStroke},stroke:${c.activeStroke};`,
+    `    classDef passDim fill:${c.dimStroke},stroke:${c.dimStroke};`
   ];
 
+  const named = (list) => list.filter((n) => !PASS_NODES.includes(n));
+  const passes = (list) => list.filter((n) => PASS_NODES.includes(n));
+  const classes = (list, cls) => list.length && lines.push(`    class ${list.join(',')} ${cls};`);
+
   if (nodes.size === 0) {
-    lines.push(`    class ${ALL_NODES.join(',')} neutral;`);
+    classes(named(ALL_NODES), 'neutral');
+    classes(PASS_NODES, 'pass');
   } else {
-    const active = [...nodes].filter((n) => n !== resultId);
+    const taken = [...nodes].filter((n) => n !== resultId);
     const dim = ALL_NODES.filter((n) => !nodes.has(n));
-    if (active.length) lines.push(`    class ${active.join(',')} active;`);
+    classes(named(taken), 'active');
+    classes(passes(taken), 'passActive');
     if (resultId) lines.push(`    class ${resultId} result;`);
-    if (dim.length) lines.push(`    class ${dim.join(',')} dim;`);
+    classes(named(dim), 'dim');
+    classes(passes(dim), 'passDim');
 
     const off = ALL_EDGES.filter((e) => !edges.includes(e));
     if (edges.length) lines.push(`    linkStyle ${edges.join(',')} stroke:${c.activeLink},stroke-width:2.5px;`);
@@ -604,19 +624,34 @@ watch(
         <li v-for="item in blueprint.switchOn" :key="item">{{ item }}</li>
       </ul>
 
-      <p v-if="answers.teams === 'several' && answers.maturity === 'starting'" class="wizard-note">
+      <p v-if="blueprint.id === 'B4' && answers.maturity === 'advanced'" class="wizard-note">
+        <strong>Because your practice is advanced:</strong> run the trunk shape - one repository, the shared core as
+        versioned modules or packages, and a short release branch per org rollout.
+      </p>
+      <p v-else-if="blueprint.id === 'B4'" class="wizard-note">
+        <strong>Because your practice is still maturing:</strong> start with
+        <a :href="withBase('/strategy/b4-multi-org-regional#per-org-environment-chains')">per-org environment chains</a>
+        - one repository per org running B2, the shared metadata in a repository of its own.
+      </p>
+      <p v-if="blueprint.id === 'B2' && answers.maturity === 'starting'" class="wizard-note">
         <strong>Because you are starting out:</strong> begin with two stages - <code>uat</code> and <code>main</code> -
         and add <code>integration</code> and <code>preprod</code> once CI and delta deployments are routine. Four
         long-lived branches at level 1 collapse under their own weight.
       </p>
-      <p v-if="answers.teams === 'several' && answers.lowCode === 'lowCode'" class="wizard-note">
+      <p v-if="answers.teams === 'several' && answers.setup === 'lowCode'" class="wizard-note">
         <strong>Because admins build most of the changes:</strong> keep this blueprint, but let tooling do the promoting
         - nobody should have to resolve an XML conflict by hand - and adopt the
         <a :href="withBase('/strategy/b5-low-code-admin-first#working-agreements')">working agreements of B5</a>.
       </p>
-      <p v-if="blueprint.id === 'B3' && answers.modularity === 'monolith'" class="wizard-note">
-        <strong>Because your metadata is not modular yet:</strong> run the trunk as one source tree - incomplete work
-        behind feature flags, schema changes additive only - and cut out modules as boundaries emerge.
+      <p v-if="answers.setup === 'balanced'" class="wizard-note">
+        <strong>Because developers and admins work side by side:</strong> keep Git as the shared source of truth, but
+        let admins contribute through tooling - the Salesforce extensions for VS Code or DevOps Center - so nobody has
+        to resolve an XML conflict by hand.
+      </p>
+      <p v-if="blueprint.id === 'B3'" class="wizard-note">
+        <strong>Decide what you ship per module:</strong> one source tree with feature flags while the metadata is not
+        modular yet, source modules once it is, and unlocked packages only where the version boundary pays - see
+        <a :href="withBase('/strategy/b3-modular-trunk#what-you-ship')">What you ship</a>.
       </p>
       <p v-if="answers.release === 'scheduled'" class="wizard-note">
         <strong>Because you release on planned dates:</strong> decouple merging from releasing. Changes collect in front

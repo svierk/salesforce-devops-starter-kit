@@ -111,7 +111,7 @@ The [DORA metrics](https://dora.dev/guides/dora-metrics/) are the standard vocab
 | Failed deployment recovery time | How fast do you recover from one?                            |
 | Deployment rework rate          | What share of deployments are unplanned fixes for incidents? |
 
-Condensed into the four levels used in [question 4](questions.md#_4-how-mature-is-your-devops-practice-and-how-modular-is-your-metadata):
+Condensed into the four levels used in [question 4](questions.md#_4-how-mature-is-your-devops-practice):
 
 1. **Starting out** - manual or lightly scripted deployments, no metrics, testing late.
 2. **Automated** - CI on every pull request, scripted deployments, static analysis blocking.
