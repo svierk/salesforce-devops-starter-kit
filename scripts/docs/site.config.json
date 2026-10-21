@@ -11,10 +11,20 @@
     },
     "actions": [
       { "theme": "brand", "text": "Get started", "link": "/getting-started" },
-      { "theme": "alt", "text": "Reusable workflows", "link": "/workflows/pr-validation" },
+      { "theme": "alt", "text": "Find your blueprint", "link": "/strategy/" },
       { "theme": "alt", "text": "View on GitHub", "link": "https://github.com/svierk/salesforce-devops-starter-kit" }
     ]
   },
+  "strategy": [
+    { "slug": "questions", "text": "The Five Questions" },
+    { "slug": "b1-simple-org-development", "text": "B1 · Simple Org Development" },
+    { "slug": "b2-multi-team-release-branches", "text": "B2 · Multi-Team with Release Branches" },
+    { "slug": "b3-package-based-modular", "text": "B3 · Package-Based / Modular" },
+    { "slug": "b4-multi-org-regional", "text": "B4 · Multi-Org / Regional Rollout" },
+    { "slug": "b5-low-code-admin-first", "text": "B5 · Low-Code First" },
+    { "slug": "mapping", "text": "Kit Mapping" },
+    { "slug": "dimensions", "text": "Dimensions & Trade-Offs" }
+  ],
   "workflows": [
     { "file": "pr-validation.yml", "example": "pr-validation.yml", "slug": "pr-validation" },
     { "file": "create-scratch-org.yml", "example": "create-scratch-org.yml", "slug": "create-scratch-org" },

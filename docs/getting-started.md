@@ -2,17 +2,31 @@
 
 This guide takes you from an empty repository to a working Salesforce CI/CD pipeline using the building blocks of this kit.
 
-## 1. Prerequisites
+## 1. Decide your strategy
+
+Before you wire up a single workflow, settle **which** org landscape and branching model the pipeline runs on. That decision determines how many environments you need, which branches are protected, and which workflows you switch on - and it is expensive to reverse once a team is working in it.
+
+If you already have a branching model that works, skip ahead. If you do not, or you are not sure it still fits:
+
+➡️ **[Find your blueprint](strategy/index.md)** - a guided questionnaire, three to five questions, leading to one of five blueprints. Each blueprint page lists the exact workflows, GitHub Environments and branch protection rules to configure, so you arrive at step 4 below knowing what to copy.
+
+::: tip Not a commitment
+Every blueprint documents its migration path to the next one. Start with the simplest model that fits and move when the signals say so - [Org & Branching Strategy](strategy/index.md) covers both.
+:::
+
+## 2. Prerequisites
 
 - A Salesforce DX project in a GitHub repository (a `sfdx-project.json` at the root).
 - A **Dev Hub** enabled org (for scratch org flows) and/or the sandbox/production orgs you deploy to.
 - A dedicated CI integration user.
 
-## 2. Set up authentication
+## 3. Set up authentication
 
 Follow [authentication.md](authentication.md) to authenticate your org with the JWT flow and store the credentials as GitHub Actions secrets (`SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME`). This is the only manual setup step.
 
-## 3. Choose a starting point
+If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the reusable workflows resolve them per environment, so one caller serves every stage.
+
+## 4. Choose a starting point
 
 You have two ways to adopt the kit:
 
@@ -100,13 +114,14 @@ jobs:
           dry-run: true
 ```
 
-## 4. Recommended next steps
+## 5. Recommended next steps
 
 - Add the **scratch org CI** workflow to run tests in a clean org on every change.
 - Add the **create scratch org** workflow so team members can provision ready-to-use orgs on demand (self-service, no local CLI needed).
 - Add a **deployment** workflow gated by a GitHub Environment for production.
 - Grant the deployed permission sets with **sfdx-assign-permissions** and automate post-deploy steps (data migrations, cache clearing) with **sfdx-apex-execute** - both are wired into the reusable workflows as optional inputs.
 - Keep the version pins current with **Dependabot** and review the hardening checklist (see [security & versioning](../README.md#-security--versioning)).
+- Revisit your [branching strategy](strategy/index.md) once a second team or a formal approval gate appears - each blueprint documents the signals and the migration path.
 
 ## Building block reference
 
