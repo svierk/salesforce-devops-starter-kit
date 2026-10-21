@@ -4,6 +4,10 @@ Several production orgs - by region, business unit or brand - with a shared core
 
 Two shapes work. The default below is **a trunk with a packaged core**: one repository, the core released as package versions, each org adopting them on its own schedule. The alternative is **[per-org environment chains](#per-org-environment-chains)**: one repository per org, each running [B2](b2-multi-team-environment-branches.md), with the shared metadata in a repository of its own.
 
+::: tip In short
+For **several production orgs** - by region, business unit or brand. Maintain the shared core once and keep local differences local: either one trunk with the core as modules or packages, or one repository per org running [B2](b2-multi-team-environment-branches.md) plus a shared-metadata repository. **Watch out:** orgs drift apart by default - review local exceptions as strictly as the core.
+:::
+
 ## At a glance
 
 |                   |                                                                                                    |
@@ -53,7 +57,7 @@ flowchart TD
 - **One sandbox chain per production org** - at minimum a UAT-grade sandbox each, because local data and local configuration are exactly what you are validating.
 - **Shared scratch orgs** for core development.
 
-The sandbox cost scales with the number of orgs, and so does everything else: secrets, environments, deployment runs, on-call. Confirm that multi-org is a business requirement (data residency, compliance, genuinely divergent processes) and not the residue of an acquisition nobody has consolidated. See [Dimensions](dimensions.md#single-org-vs-multi-org).
+The sandbox cost scales with the number of orgs, and so does everything else: secrets, environments, deployment runs, on-call. Confirm that multi-org is a business requirement (data residency, compliance, genuinely divergent processes) and not the residue of an acquisition nobody has consolidated. See [Background](background.md#single-org-vs-multi-org).
 
 ## Repository topology
 
@@ -86,7 +90,7 @@ config/
 - `release/<org>` branches are **short-lived** - created for a rollout, merged or deleted after it lands. They exist to pin the core version an org is adopting and to carry rollout-specific fixes.
 - Org-local metadata under `orgs/<region>/` changes on `main` too. It is scoped by path, not by branch.
 
-**The anti-pattern to avoid:** a permanent long-lived branch per production org _inside one repository_. That is [branch-per-org](dimensions.md#branching-models) at organisational scale, and it guarantees that the regions diverge until the shared core is a fiction. Version pinning through packages is what keeps orgs independent - not branches.
+**The anti-pattern to avoid:** a permanent long-lived branch per production org _inside one repository_. That is [branch-per-org](background.md#branching-models) at organisational scale, and it guarantees that the regions diverge until the shared core is a fiction. Version pinning through packages is what keeps orgs independent - not branches.
 
 ### Per-org environment chains
 

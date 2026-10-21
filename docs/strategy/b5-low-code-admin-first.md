@@ -2,6 +2,10 @@
 
 Most changes are built by clicking, by people who do not use Git. The strategy's job here is to make version control real without making it the admins' problem.
 
+::: tip In short
+For **admin-heavy teams** where Git knowledge is the bottleneck. Two org-bound branches, `uat` and `main`, with tooling such as DevOps Center doing the promoting and a static-analysis gate tuned to declarative work. Admins never have to touch Git. **Watch out:** the bus factor - name a pipeline owner and a deputy.
+:::
+
 ## At a glance
 
 |                   |                                                                          |
@@ -57,7 +61,7 @@ Two long-lived branches, `uat` and `main`, each bound to an org. Work-item branc
 Either way, the admin's interface is a form, not a command line.
 
 ::: warning Two stages, deliberately
-This is an environment-branch model, which [Dimensions](dimensions.md#branching-models) warns about - and the warning holds. It is defensible here only because there are **two** stages, not four, and because tooling performs the promotions. If you find yourself adding a third org-bound branch, the model has outgrown its justification: move to [B1](b1-simple-org-development.md) if the team has learned Git, or to [B2](b2-multi-team-environment-branches.md) if you genuinely need the gates.
+This is an environment-branch model, which [Background](background.md#branching-models) warns about - and the warning holds. It is defensible here only because there are **two** stages, not four, and because tooling performs the promotions. If you find yourself adding a third org-bound branch, the model has outgrown its justification: move to [B1](b1-simple-org-development.md) if the team has learned Git, or to [B2](b2-multi-team-environment-branches.md) if you genuinely need the gates.
 :::
 
 ## Promotion path & roles

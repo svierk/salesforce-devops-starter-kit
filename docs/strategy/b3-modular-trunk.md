@@ -4,6 +4,10 @@ Several teams on one trunk: `main` is always releasable, work merges daily behin
 
 Packaging is a means, not the goal. The goal is modular metadata with explicit dependencies and releasable artifacts. Source modules get you most of the way and are the better default; unlocked packages earn their extra build and promotion cost for stable, shared building blocks.
 
+::: tip In short
+For **several teams mature enough to share one trunk**. `main` is always releasable, work merges daily behind feature flags, and the metadata is cut into modules - packages only where a version boundary pays. Switch on a validation check that genuinely blocks, and scratch org CI. **Watch out:** trunk-based without a real gate is just pushing to production.
+:::
+
 ## At a glance
 
 |                   |                                                                                                     |

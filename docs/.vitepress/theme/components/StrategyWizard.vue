@@ -22,6 +22,13 @@ const QUESTIONS = {
     label: 'Org landscape',
     title: 'How many production orgs do you run?',
     why: 'Asked first because it is an architecture decision your DevOps model has to follow. It decides your repository topology and how far the pipeline fans out. Count production orgs only - sandboxes do not count.',
+    info: {
+      text: [
+        'One production org means one deployment target and one source of truth. Several mean the same change may need to land in each of them, at different times, with local variations - which pushes you toward shared packages or a shared metadata repository rather than shared branches.',
+        'Multi-org is a legitimate answer to divergent business processes, data residency and compliance boundaries, or org limits. It costs you unified reporting, cross-org reuse and a multiple of the pipeline surface. Do not answer "several" just because you have several sandboxes - and do answer it if a single team runs several production orgs.'
+      ],
+      effect: 'Several → B4, whatever else you answer; your maturity then picks its shape.'
+    },
     options: [
       { value: 'single', label: 'One production org', detail: 'One deployment target, one source of truth.' },
       {
@@ -35,6 +42,12 @@ const QUESTIONS = {
     label: 'Teams',
     title: 'How many teams or parallel workstreams?',
     why: 'The strongest driver of how many long-lived branches you need. Every extra long-lived branch costs merge effort and XML conflict risk, permanently.',
+    info: {
+      text: [
+        'A single stream can integrate directly on main - every merge is already the integration. Several streams need somewhere to collide before production, and often a way to freeze scope while the next stream keeps moving.'
+      ],
+      effect: 'One → B1 or B5, depending on the team setup. Several → B2, or B3 at maturity level 4.'
+    },
     options: [
       {
         value: 'one',
@@ -52,6 +65,17 @@ const QUESTIONS = {
     label: 'Team setup',
     title: 'How is the team set up?',
     why: 'Salesforce is unusual in that much of the change is made by clicking, by people for whom a rebase is not a reasonable ask. The more of your team works that way, the more the strategy has to hide Git rather than expose it.',
+    info: {
+      text: [
+        'Hiding Git means fewer environments, more automation, retrieval assisted by tooling, and a model where nobody resolves an XML conflict by hand.'
+      ],
+      points: [
+        'Mostly developers - pull requests and branches can be everyone’s interface.',
+        'Balanced - the most common setup. Git stays the shared source of truth; admins contribute through tooling such as the Salesforce extensions for VS Code or DevOps Center.',
+        'Mostly admins - most changes originate declaratively, and those builders would otherwise have to work in Git themselves.'
+      ],
+      effect: 'One team: admins → B5, otherwise B1. Several teams: the blueprint stays - tooling does the promoting.'
+    },
     options: [
       {
         value: 'developers',
@@ -74,6 +98,16 @@ const QUESTIONS = {
     label: 'Maturity',
     title: 'How mature is your DevOps practice?',
     why: 'Maturity caps how many environments you can operate, and decides whether several teams can share one trunk. Counter-intuitively, higher maturity means fewer long-lived branches, not more.',
+    info: {
+      points: [
+        'Level 1 - deployments are manual or barely automated, tests run late, no metrics. Four long-lived branches would collapse under their own weight.',
+        'Level 2-3 - CI runs on every pull request, deployments are scripted, delta deployments are in place, someone watches failure rates.',
+        'Level 4 - trunk-based or near it, feature flags decouple deploy from release, delivery metrics are tracked and improving.'
+      ],
+      note: 'How modular your metadata is does not decide whether several teams can share a trunk - discipline and a blocking gate do. It decides what you ship from that trunk: one source tree, source modules or packages.',
+      effect:
+        'Several teams: level 4 → B3, levels 1-3 → B2 (with two stages at level 1). Several orgs: level 4 → a trunk with a shared core, below → per-org chains.'
+    },
     options: [
       {
         value: 'starting',
@@ -96,6 +130,19 @@ const QUESTIONS = {
     label: 'Release style',
     title: 'How do you ship to production?',
     why: 'How changes are batched on their way to production. With several streams on one org it picks one of three variants of the blueprint; everywhere else it shapes how you set the blueprint up.',
+    info: {
+      text: [
+        'This is not the same as how often you deploy. And package versions are not a fourth answer - they are an artifact you can ship in any of these three ways.'
+      ],
+      points: [
+        'Story by story - merging, or promoting a story to production, is the release decision. Needs a gate that genuinely blocks and small, independent changes.',
+        'Bundled into production - stories are signed off one by one, production gets them together on a date. The most common pattern in practice.',
+        'Whole releases - scope is planned, frozen and tested as one release, and needs a place to freeze it while the next release keeps moving.'
+      ],
+      note: 'Compliance is a separate matter: if the author of a change must not be the one who promotes it (SOX and similar), add required reviewers to the GitHub Environment in front of production - with any release style.',
+      effect:
+        'Several teams on one org: picks the B2 variant - story promotion, release bundle or release train. Everywhere else it tailors the result.'
+    },
     options: [
       {
         value: 'continuous',
@@ -228,6 +275,9 @@ const BLUEPRINTS = {
 
 const answers = ref({});
 const cursor = ref(0);
+// The "?" details belong to one question - close them when the question changes.
+const showInfo = ref(false);
+watch(cursor, () => (showInfo.value = false));
 
 // Every question is always asked, in this order, so every path through the tree
 // has the same length. An answer that cannot change the blueprint on a path
@@ -292,6 +342,21 @@ function back() {
 function jumpTo(stepId) {
   const i = STEPS.indexOf(stepId);
   if (i >= 0) cursor.value = i;
+}
+
+const copied = ref(false);
+
+/** The URL hash holds the answers, so the current URL is the shareable result. */
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  } catch {
+    // Clipboard access can be blocked (permissions, insecure context) - offer
+    // the link for manual copying instead.
+    window.prompt('Copy this link:', window.location.href);
+  }
 }
 
 function reset() {
@@ -577,8 +642,30 @@ watch(
         </div>
       </div>
 
-      <h3 class="wizard-question">{{ currentStep.title }}</h3>
+      <div class="wizard-question-row">
+        <h3 class="wizard-question">{{ currentStep.title }}</h3>
+        <button
+          type="button"
+          class="wizard-info-btn"
+          :class="{ 'is-open': showInfo }"
+          :aria-expanded="showInfo"
+          aria-controls="wizard-info"
+          :aria-label="showInfo ? 'Hide why this question matters' : 'Why this question matters'"
+          :title="showInfo ? 'Hide details' : 'Why this question matters'"
+          @click="showInfo = !showInfo"
+        >
+          ?
+        </button>
+      </div>
       <p class="wizard-why">{{ currentStep.why }}</p>
+      <div v-if="showInfo" id="wizard-info" class="wizard-info">
+        <p v-for="text in currentStep.info.text ?? []" :key="text">{{ text }}</p>
+        <ul v-if="currentStep.info.points">
+          <li v-for="point in currentStep.info.points" :key="point">{{ point }}</li>
+        </ul>
+        <p v-if="currentStep.info.note">{{ currentStep.info.note }}</p>
+        <p class="wizard-info-effect"><strong>What it changes:</strong> {{ currentStep.info.effect }}</p>
+      </div>
 
       <div class="wizard-options">
         <button
@@ -672,6 +759,9 @@ watch(
       <div class="wizard-cta">
         <a class="wizard-btn" :href="withBase(blueprint.link)">Read the {{ blueprint.id }} blueprint</a>
         <a class="wizard-btn is-alt" :href="withBase('/strategy/mapping')">Kit mapping</a>
+        <button type="button" class="wizard-btn is-alt" @click="copyLink">
+          {{ copied ? 'Link copied' : 'Copy link' }}
+        </button>
       </div>
     </div>
 
@@ -761,6 +851,53 @@ watch(
   padding: 0;
 }
 
+.wizard-question-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wizard-info-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+.wizard-info-btn:hover,
+.wizard-info-btn.is-open {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+}
+.wizard-info {
+  margin: -4px 0 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 0 8px 8px 0;
+  background: var(--vp-c-brand-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.wizard-info p,
+.wizard-info ul {
+  margin: 0 0 8px;
+}
+.wizard-info ul {
+  padding-left: 18px;
+}
+.wizard-info .wizard-info-effect {
+  margin-bottom: 0;
+}
 .wizard-why {
   margin: 0 0 16px;
   font-size: 14px;
@@ -965,6 +1102,10 @@ watch(
   background: var(--vp-button-brand-hover-bg, var(--vp-c-brand-2));
 }
 
+button.wizard-btn {
+  font-family: inherit;
+  cursor: pointer;
+}
 .wizard-btn.is-alt {
   background: var(--vp-c-bg-soft);
   color: var(--vp-c-text-1);

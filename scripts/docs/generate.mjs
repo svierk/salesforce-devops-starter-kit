@@ -296,10 +296,10 @@ function buildSidebar(workflowMeta, blockMeta) {
     // editorial content, so it is listed from site.config.json rather than
     // derived from the repository.
     {
-      text: 'Org & Branching Strategy',
+      text: 'Strategy & Blueprints',
       collapsed: false,
       items: [
-        { text: 'Overview', link: '/strategy/' },
+        { text: 'Find your blueprint', link: '/strategy/' },
         ...config.strategy.map((page) => ({ text: page.text, link: `/strategy/${page.slug}` }))
       ]
     },

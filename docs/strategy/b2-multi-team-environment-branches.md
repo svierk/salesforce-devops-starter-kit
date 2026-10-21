@@ -2,11 +2,15 @@
 
 Several streams, one long-lived Git branch per org, and an explicit release decision. The classic enterprise Salesforce setup - and the one that costs the most to operate, so adopt it only for the stages your approval process actually requires.
 
-The environment branches are the same in every variant. What differs is **what travels between them**, and that follows from [how you release](questions.md#_5-how-do-you-release):
+The environment branches are the same in every variant. What differs is **what travels between them**, and that follows from [how you release](background.md#release-styles):
 
 - **[Release train](#release-train)** - the whole state of a branch moves up the chain, stage by stage, on planned release dates. It is the default model of the open-source [sfdx-hardis](https://sfdx-hardis.cloudity.com/salesforce-devops-deploy-major-branches/).
 - **[Story promotion](#story-promotion)** - every user story travels on its own, into each stage through a short-lived promotion branch, and reaches production when it is ready. [Gearset Pipelines](https://docs.gearset.com/en/articles/6115722-the-gearset-pipelines-branching-model) implements it almost exactly; Copado and DevOps Center follow the same principle with different mechanics. Here it runs on plain GitHub and the kit's workflows.
 - **[Release bundle](#release-bundle)** - stories travel one by one up to UAT, where they are signed off individually; on the release date, a release branch carries the signed-off stories as one bundle through pre-production into production. DevOps Center builds the same idea in as a "bundling stage".
+
+::: tip In short
+For **several teams sharing one production org** with approval gates. One long-lived branch per org - `integration`, `uat`, `preprod`, `main` - and changes promoted story by story, as a bundle on release dates, or as a whole release train. Switch on PR validation on every environment branch and one deployment per branch, each with its own GitHub Environment. **Watch out:** merge overhead and drift grow with every stage - keep only the stages your approvals need.
+:::
 
 ## At a glance
 
@@ -142,7 +146,7 @@ At maturity level 1, four long-lived branches collapse under their own weight. S
 :::
 
 ::: warning This is the expensive blueprint
-On Enterprise Edition, Full and Developer Pro sandboxes are a paid add-on. Before committing to four stages, price the entitlement - and ask whether UAT on a Partial Copy would be enough, which is often the case. A stage nobody signs off in is pure overhead. See [Dimensions](dimensions.md#sandbox-types).
+On Enterprise Edition, Full and Developer Pro sandboxes are a paid add-on. Before committing to four stages, price the entitlement - and ask whether UAT on a Partial Copy would be enough, which is often the case. A stage nobody signs off in is pure overhead. See [Background](background.md#sandbox-types).
 :::
 
 Remember the refresh intervals: a Full sandbox can only be refreshed every 29 days, so `preprod` drifts from production between refreshes. Schedule the refresh, and treat "it worked in preprod" as evidence, not proof.
@@ -230,7 +234,7 @@ Grant merge rights on `uat`, `preprod` and `main` to the release manager role on
 ## Trade-offs & anti-patterns
 
 - **Four long-lived branches is real, permanent overhead.** Every promotion is a merge, and XML metadata merges badly. This is the cost you are paying for the gates - make sure you are getting them.
-- **Do not degrade into branch-per-org as backup.** If promotions stop being reviewed pull requests and become "sync the branch to what is in the org", you have lost the model's only real benefit. See the [warning in Dimensions](dimensions.md#branching-models).
+- **Do not degrade into branch-per-org as backup.** If promotions stop being reviewed pull requests and become "sync the branch to what is in the org", you have lost the model's only real benefit. See the [warning in Dimensions](background.md#branching-models).
 - **Do not add a fifth stage.** If something needs another environment, it usually needs feature flags instead.
 - **Drift is the silent failure mode.** Orgs receive changes outside the pipeline; each one makes the next promotion less predictable.
 - **Release train: do not test large features directly in `preprod`.** It blocks the RUN stream and skips the UAT gate.

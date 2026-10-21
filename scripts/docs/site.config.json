@@ -16,14 +16,13 @@
     ]
   },
   "strategy": [
-    { "slug": "questions", "text": "The Five Questions" },
     { "slug": "b1-simple-org-development", "text": "B1 · Simple Org Development" },
     { "slug": "b2-multi-team-environment-branches", "text": "B2 · Multi-Team with Environment Branches" },
     { "slug": "b3-modular-trunk", "text": "B3 · Modular Trunk" },
     { "slug": "b4-multi-org-regional", "text": "B4 · Multi-Org / Regional Rollout" },
     { "slug": "b5-low-code-admin-first", "text": "B5 · Low-Code First" },
     { "slug": "mapping", "text": "Kit Mapping" },
-    { "slug": "dimensions", "text": "Dimensions & Trade-Offs" }
+    { "slug": "background", "text": "Background & Trade-Offs" }
   ],
   "workflows": [
     { "file": "pr-validation.yml", "example": "pr-validation.yml", "slug": "pr-validation" },

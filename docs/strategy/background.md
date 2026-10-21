@@ -1,6 +1,10 @@
-# Dimensions & Trade-Offs
+# Background & Trade-Offs
 
-Background for the [five questions](questions.md). Read this if you want to argue with a blueprint rather than adopt it.
+The reasoning behind the [questionnaire](index.md) and the blueprints. Read this if you want to argue with a blueprint rather than adopt it.
+
+## Why Salesforce is different
+
+The choice of org landscape and branching model is harder on Salesforce than elsewhere. Sandboxes are licensed, metered and slow to refresh; there is no true rollback; declarative changes arrive from people who may never touch Git; and XML metadata merges badly. Copying a branching model from a web project rarely survives contact with those constraints - the sections below are the trade-offs the blueprints are built on.
 
 ## Sandbox types
 
@@ -77,7 +81,7 @@ If you land on an environment-style model - [B2](b2-multi-team-environment-branc
 
 ## Release styles
 
-How you release is a separate choice from how you branch, and it narrows the branching options more than people expect. [Question 5](questions.md#_5-how-do-you-release) asks it.
+How you release is a separate choice from how you branch, and it narrows the branching options more than people expect. The [questionnaire](index.md) asks it last.
 
 | Release style               | A release is                                              | Fits                                                                                                                                                                         |
 | --------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,7 +115,7 @@ The [DORA metrics](https://dora.dev/guides/dora-metrics/) are the standard vocab
 | Failed deployment recovery time | How fast do you recover from one?                            |
 | Deployment rework rate          | What share of deployments are unplanned fixes for incidents? |
 
-Condensed into the four levels used in [question 4](questions.md#_4-how-mature-is-your-devops-practice):
+Condensed into the four levels the [questionnaire](index.md) asks about:
 
 1. **Starting out** - manual or lightly scripted deployments, no metrics, testing late.
 2. **Automated** - CI on every pull request, scripted deployments, static analysis blocking.

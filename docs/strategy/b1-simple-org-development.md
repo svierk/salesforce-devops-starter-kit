@@ -2,6 +2,10 @@
 
 The default starting point. One team, one production org, one branch that is always deployable.
 
+::: tip In short
+For **one team on one production org**. Work on short-lived `feature/*` branches off `main`, let every pull request pass the validation check, and deploy `main` to production behind a GitHub Environment with required reviewers. **Watch out:** once merges get held back to protect production, you have outgrown it - see the migration path.
+:::
+
 ## At a glance
 
 |                   |                                                                               |
