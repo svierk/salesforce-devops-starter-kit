@@ -22,6 +22,6 @@ Closes #
 
 - [ ] The change is scoped to this repository (reusable workflows, examples or docs). A change to a single building block belongs in that action's own repository.
 - [ ] Reusable workflow inputs, secrets and outputs are documented (and defaults kept explicit).
-- [ ] The documentation site still generates (`npm run docs:build`) if workflows, examples or docs changed.
+- [ ] The documentation site still generates (`npm run docs:build`) and the tests pass (`npm test`) if workflows, examples or docs changed.
 - [ ] Commits follow the [Conventional Commits](https://www.conventionalcommits.org/) style.
 - [ ] Documentation was updated where needed.

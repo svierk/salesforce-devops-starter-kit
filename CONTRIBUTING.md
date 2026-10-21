@@ -19,7 +19,7 @@ Please open issues and pull requests in the repository that matches your change:
 3. Keep changes focused and follow the conventions of the existing code:
    - Building blocks are composite actions; pass inputs via `env:` and start scripts with `set -euo pipefail`.
    - Document new inputs and outputs in the action's README.
-   - The documentation site is generated from this repository by `npm run docs:build`. Hand-written pages under `docs/strategy/` are listed in [scripts/docs/site.config.json](scripts/docs/site.config.json) - add a new page there, or the build fails.
+   - The documentation site is generated from this repository by `npm run docs:build`. Hand-written pages under `docs/strategy/` are listed in [scripts/docs/site.config.json](scripts/docs/site.config.json) - add a new page there, or the build fails. The questionnaire's routing lives in `docs/.vitepress/theme/strategy-routing.mjs`; `npm test` checks it against the routing table and the decision tree in `docs/strategy/index.md`, so change them together.
 4. Open a pull request and link the related issue.
 
 ## Adding a new building block

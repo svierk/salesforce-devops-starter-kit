@@ -3,10 +3,10 @@
  * Guided questionnaire that walks a reader to one of the five strategy
  * blueprints, and draws the decision tree with the path they took highlighted.
  *
- * The question flow is adaptive: a question is only asked when its answer can
- * still change the outcome, so the simplest path is three questions rather than
- * five. The routing mirrors the static decision tree in docs/strategy/index.md
- * exactly - if one changes, change the other.
+ * All questions are always asked, in the same order, and the result shows only
+ * after the last one. The routing and the tree live in ../strategy-routing.mjs;
+ * this component only words and draws them. `npm test` checks that routing
+ * against the routing table and the static tree in docs/strategy/index.md.
  *
  * The tree is drawn through ../mermaid, which imports mermaid on first draw:
  * the docs site is server-rendered at build time, and mermaid needs a DOM.
@@ -16,6 +16,17 @@ import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 // internal href has to go through withBase rather than being hard-coded.
 import { withBase } from 'vitepress';
 import { renderMermaid } from '../mermaid';
+import {
+  ALL_NODES,
+  PASS_NODES,
+  STEPS,
+  TREE,
+  TREE_NODES,
+  blueprintFor,
+  edgeIndex,
+  pathNodes,
+  variantFor
+} from '../strategy-routing.mjs';
 
 const QUESTIONS = {
   orgs: {
@@ -279,35 +290,6 @@ const cursor = ref(0);
 const showInfo = ref(false);
 watch(cursor, () => (showInfo.value = false));
 
-// Every question is always asked, in this order, so every path through the tree
-// has the same length. An answer that cannot change the blueprint on a path
-// still tailors its result.
-const STEPS = ['orgs', 'teams', 'setup', 'maturity', 'release'];
-
-function blueprintFor(a) {
-  if (a.orgs === 'multi') return 'B4';
-  if (a.orgs !== 'single') return null;
-  if (a.teams === 'one') {
-    if (a.setup === 'lowCode') return 'B5';
-    if (a.setup) return 'B1';
-    return null;
-  }
-  if (a.teams === 'several' && a.setup) {
-    // Team setup does not change the blueprint for several teams - it adds a
-    // note on tool-driven promotion to the result instead. Level 4 already
-    // works trunk-based; modularity only decides what B3 ships.
-    if (a.maturity === 'advanced') return 'B3';
-    if (a.maturity) return 'B2';
-  }
-  return null;
-}
-
-/** B2's variant follows the release style. */
-function variantFor(a) {
-  if (blueprintFor(a) !== 'B2' || !a.release) return null;
-  return { continuous: 'story', bundled: 'bundle', scheduled: 'train' }[a.release] ?? null;
-}
-
 const steps = computed(() => STEPS);
 const currentStepId = computed(() => STEPS[cursor.value] ?? null);
 const currentStep = computed(() => (currentStepId.value ? QUESTIONS[currentStepId.value] : null));
@@ -398,54 +380,6 @@ function readHash() {
 
 const diagram = ref(null);
 
-// The tree has one level per question and every path crosses all of them, so
-// all results sit on the bottom level. Where an answer cannot change the
-// blueprint on a path, the path runs through a small pass-through node (P…)
-// instead of a question. Edge indices follow the order the links are declared
-// in TREE below - linkStyle addresses edges by that index.
-const TREE = [
-  ['QO', 'QT', 'One'],
-  ['QO', 'P2M', 'Several'],
-  ['QT', 'QS', 'One'],
-  ['QT', 'P3N', 'Several'],
-  ['P2M', 'P3M'],
-  ['QS', 'P4B1', 'Developers / balanced'],
-  ['QS', 'P4B5', 'Low-code'],
-  ['P3N', 'QM'],
-  ['P3M', 'P4M'],
-  ['P4B1', 'P5B1'],
-  ['P4B5', 'P5B5'],
-  ['QM', 'QR', 'Level 1-3'],
-  ['QM', 'P5B3', 'Level 4'],
-  ['P4M', 'P5M'],
-  ['P5B1', 'B1'],
-  ['P5B5', 'B5'],
-  ['QR', 'B2S', 'Story by story'],
-  ['QR', 'B2B', 'Bundled from UAT'],
-  ['QR', 'B2T', 'Whole releases'],
-  ['P5B3', 'B3'],
-  ['P5M', 'B4']
-];
-
-const TREE_NODES = {
-  QO: '{"How many<br/>production orgs?"}',
-  QT: '{"How many teams or<br/>parallel workstreams?"}',
-  QS: '{"How is the<br/>team set up?"}',
-  QM: '{"How mature is your<br/>DevOps practice?"}',
-  QR: '{"How do you ship<br/>to production?"}',
-  B1: '["<b>B1</b><br/>Simple Org Development"]',
-  B5: '["<b>B5</b><br/>Low-Code First"]',
-  B2S: '["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]',
-  B2B: '["<b>B2</b><br/>Environment Branches<br/>· Release Bundle"]',
-  B2T: '["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
-  B3: '["<b>B3</b><br/>Modular Trunk"]',
-  B4: '["<b>B4</b><br/>Multi-Org / Regional"]'
-};
-
-const ALL_NODES = [...new Set(TREE.flatMap(([from, to]) => [from, to]))];
-const PASS_NODES = ALL_NODES.filter((n) => n.startsWith('P'));
-const ALL_EDGES = TREE.map((_, i) => i);
-
 // Mermaid needs literal colors, so the brand tokens from theme/custom.css are
 // repeated here - keep the two in step when the palette changes. The dark
 // surfaces follow the night-blue --vp-c-bg-soft / --vp-c-bg-elv, not grays.
@@ -484,56 +418,12 @@ const PALETTE = {
   }
 };
 
-/** The nodes the answers given so far lead through, one per answered question,
- * starting at the root. Questions are answered in order, so the walk stops at
- * the first one still open. */
-function pathNodes(a) {
-  const nodes = ['QO'];
-  if (!a.orgs) return nodes;
-  if (a.orgs === 'multi') {
-    nodes.push('P2M');
-    for (const [step, node] of [
-      ['teams', 'P3M'],
-      ['setup', 'P4M'],
-      ['maturity', 'P5M'],
-      ['release', 'B4']
-    ]) {
-      if (!a[step]) return nodes;
-      nodes.push(node);
-    }
-    return nodes;
-  }
-  nodes.push('QT');
-  if (!a.teams) return nodes;
-  if (a.teams === 'one') {
-    nodes.push('QS');
-    if (!a.setup) return nodes;
-    const [p4, p5, result] = a.setup === 'lowCode' ? ['P4B5', 'P5B5', 'B5'] : ['P4B1', 'P5B1', 'B1'];
-    nodes.push(p4);
-    if (a.maturity) nodes.push(p5);
-    if (a.maturity && a.release) nodes.push(result);
-    return nodes;
-  }
-  nodes.push('P3N');
-  if (!a.setup) return nodes;
-  nodes.push('QM');
-  if (!a.maturity) return nodes;
-  if (a.maturity === 'advanced') {
-    nodes.push('P5B3');
-    if (a.release) nodes.push('B3');
-    return nodes;
-  }
-  nodes.push('QR');
-  if (a.release) nodes.push({ continuous: 'B2S', bundled: 'B2B', scheduled: 'B2T' }[a.release]);
-  return nodes;
-}
-
 /** Nodes and edges traversed by the answers given so far. */
 function takenPath() {
   const path = pathNodes(answers.value);
   const edges = [];
   for (let i = 1; i < path.length; i++) {
-    edges.push(TREE.findIndex(([from, to]) => from === path[i - 1] && to === path[i]));
+    edges.push(edgeIndex(path[i - 1], path[i]));
   }
   // Before the first answer nothing is taken - not even the root.
   return { nodes: new Set(path.length > 1 ? path : []), edges, last: path[path.length - 1] };
@@ -579,7 +469,7 @@ function treeSource(isDark) {
     classes(named(dim), 'dim');
     classes(passes(dim), 'passDim');
 
-    const off = ALL_EDGES.filter((e) => !edges.includes(e));
+    const off = TREE.map((_, i) => i).filter((e) => !edges.includes(e));
     if (edges.length) lines.push(`    linkStyle ${edges.join(',')} stroke:${c.activeLink},stroke-width:2.5px;`);
     if (off.length) lines.push(`    linkStyle ${off.join(',')} stroke:${c.dimLink},opacity:0.45;`);
   }
