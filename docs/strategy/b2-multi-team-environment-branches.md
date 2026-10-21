@@ -181,7 +181,9 @@ After a hotfix reaches `main`, **retrofit** it back into the BUILD stream: branc
 
 `feature/*` branches start from **`main`**, so a story carries the production state plus its own change - nothing that is still in flight in a lower stage. Keep `main` as the default branch.
 
-Environment branches are **never merged into each other**. A story reaches each stage on its own:
+Environment branches are **never merged into each other**. A story reaches each stage on its own, through a **promotion branch**: a short-lived branch cut from the target environment branch, holding exactly one story for exactly one stage. (Some tools use the term differently - sfdx-hardis, for example, calls a cherry-picked partial release a promotion branch.)
+
+For each stage:
 
 1. Create a promotion branch from the target environment branch, e.g. `promotion/story-123-uat` from `uat`.
 2. Merge the feature branch into it. Resolve conflicts **here**, so the feature branch stays clean for the next stage.
@@ -197,7 +199,7 @@ gh pr create --base uat --title "Promote story-123 to uat"
 
 To production, the feature branch itself goes into `main` - through a promotion branch only if it conflicts. An urgent fix is simply a story that is promoted only as far as it has to go, typically `uat` and then `main`, without waiting for anything else.
 
-**Sync after every release.** Each stage holds a different set of stories, so the environment branches drift apart by design. After each production deployment, merge `main` back into every environment branch through a pull request. It keeps each stage at "production plus the stories in flight", and it stops the same conflict from coming back at every stage.
+**Sync after every release.** Each stage holds a different set of stories, so the environment branches drift apart by design. After each production deployment, merge `main` back into every environment branch through a pull request. It keeps each stage at "production plus the stories in flight", and it stops the same conflict from coming back at every stage. Do not replace it with story-by-story back-merges: those carry a story's own commits, but not the merge commits on `main`, which then resurface later as unexplained differences.
 
 ### Release bundle
 
@@ -239,7 +241,8 @@ Grant merge rights on `uat`, `preprod` and `main` to the release manager role on
 - **Drift is the silent failure mode.** Orgs receive changes outside the pipeline; each one makes the next promotion less predictable.
 - **Release train: do not test large features directly in `preprod`.** It blocks the RUN stream and skips the UAT gate.
 - **Story promotion: what you tested is not byte for byte what you ship.** Each stage resolves its own conflicts, so `uat` and `main` can differ in more than the stories they hold. The sync after every release keeps that gap small; skipping it makes it grow.
-- **Story promotion: dependent stories need a rule.** If story B builds on story A, promoting B alone breaks the stage. Track the dependency on the work item, and promote A first.
+- **Story promotion: dependent stories need a rule.** If story B builds on story A, promoting B alone breaks the stage. Once a dependency is known, combine the two into one feature branch and promote them together - "promote A first" fails as soon as A is held back.
+- **Story promotion and release bundle: deltas hide gaps.** Every stage only ever receives deltas, and a delta can pass where a full deployment of the same branch would fail - a deleted picklist value that is still referenced, for example. Run a full check-only deployment of every environment branch into its org regularly - weekly is enough. With the kit, that is a `workflow_dispatch` caller of [`deployment.yml`](/workflows/deployment) with `dry-run: true` and `delta: false`, started from each environment branch in the Actions tab.
 - **Release bundle: stories are merged twice.** Once per stage up to `uat`, then again into the release branch - conflicts can need solving at both points. Small, independent stories keep that cheap.
 - **Story promotion: do not promote by hand at scale.** Four promotion branches per story is toil. Automate the steps above, and see the caveat under Kit mapping.
 
@@ -323,6 +326,7 @@ Environment secrets only reach the deployments. The PR validation above reads th
 - Require branches to be up to date before merging
 - Restrict who can merge into `uat`, `preprod` and `main` to the release manager role
 - Block force pushes and deletions
+- Release train: merge environment-to-environment pull requests with a merge commit - never squash, and do not delete the source branch. The next promotion's scope is computed from that history.
 - Default branch: `integration` for the release train, `main` for story promotion and the release bundle
 
 **Optional:** [`scratch-org-ci.yml`](/workflows/scratch-org-ci) on `feature/*` pushes as fast CI before the first promotion - it creates a clean org, deploys, tests and deletes it, so a story is tested in isolation before it reaches shared `integration`.

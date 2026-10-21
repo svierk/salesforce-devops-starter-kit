@@ -128,7 +128,11 @@ Start at `severity-threshold: '2'` and tighten it as the team's Apex share grows
 
 `secrets: inherit` hands the validation the repository secrets - store the UAT sandbox credentials there. The environment secrets below only reach the deployments.
 
-**Deployment per stage** - [`deployment.yml`](/workflows/deployment) on push to `uat` and `main`, with a GitHub Environment each:
+::: warning One deployment engine per stage
+DevOps Center deploys when it promotes a work item, and it merges into `uat` and `main` as it does so. If DevOps Center is your promotion tool, do **not** add the deployment caller below as well - every promotion would deploy twice, the second time outside DevOps Center's view. Let DevOps Center own deployment, keep the kit for validation and self-service orgs, and check that your branch protection rules still allow DevOps Center's merges.
+:::
+
+**Deployment per stage** - only on the kit route, where a workflow in this repository opens the work-item pull requests: [`deployment.yml`](/workflows/deployment) on push to `uat` and `main`, with a GitHub Environment each:
 
 ```yaml
 name: Deployment

@@ -78,4 +78,6 @@ flowchart TD
 
 At level 1, B2 starts with two stages. Several teams of admins keep their blueprint, but let tooling do the promoting.
 
+The routing is a heuristic, not a measurement: there is no neutral, Salesforce-specific data that ties a branching model to delivery performance. The blueprints are for teams building on their own production orgs - if you distribute an app through AppExchange, you need managed 2GP packages and a namespace, and none of them is your model.
+
 </details>

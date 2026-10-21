@@ -17,7 +17,9 @@ Your branching model can never be richer than your sandbox budget. Each long-liv
 | Partial Copy  | 5 GB data, sampled via a template (up to 10,000 records per object) / file storage as production | Metadata + sample data | 5 days           |
 | Full          | Same as production                                                                               | Metadata + all data    | 29 days          |
 
-The **refresh interval** is the constraint people underestimate. A Full sandbox used as pre-production can only be brought back in line with production once every 29 days - so it drifts, and the drift is invisible until a deployment fails there and not in production.
+The **refresh interval** is the constraint people underestimate. A Full sandbox used as pre-production can only be brought back in line with production once every 29 days - so it drifts, and the drift is invisible until a deployment fails there and not in production. A failed release rehearsal in a Full sandbox cannot be repeated from a clean state within the same month, either.
+
+Two platform features soften this. **Quick Clone** creates a new sandbox from a template sandbox instead of from production, which is much faster for short-lived test environments. **Data Mask & Seed** masks personal data in sandboxes and seeds them with realistic test data - an alternative to the template sampling of a Partial Copy.
 
 ::: warning Licences are edition-dependent
 Sandbox entitlements ship with the edition, and the gap between editions is large. Enterprise Edition includes 25 Developer sandboxes and one Partial Copy but **not** Full or Developer Pro - those are a [paid add-on](https://www.salesforce.com/editions-pricing/platform/environments/), priced as a share of your net spend (at list price roughly 5 % for Developer Pro, 20 % for Partial Copy and 30 % for Full). Performance and Unlimited Edition include a Full sandbox and several Developer Pro sandboxes as standard.
@@ -25,7 +27,7 @@ Sandbox entitlements ship with the edition, and the gap between editions is larg
 Any blueprint below that asks for a Full-copy UAT or pre-production stage is therefore a **budget decision** on Enterprise Edition, not just a technical one. Entitlements change; confirm yours against [Salesforce Help](https://help.salesforce.com/s/articleView?id=platform.deploy_sandboxes_parent.htm&type=5) before you plan around them.
 :::
 
-Scratch orgs sidestep the entitlement question for development and CI - they are ephemeral, source-tracked and created from a definition file. They cannot replace a data-realistic UAT stage, because they start empty.
+Scratch orgs sidestep the entitlement question for development and CI - they are ephemeral, source-tracked and created from a definition file. They cannot replace a data-realistic UAT stage, because they start empty. Their limits come from the Dev Hub: Enterprise Edition allows 40 active scratch orgs and 80 new ones per day, Unlimited and Performance 100 and 200 ([Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_scratch_orgs_editions_and_allocations.htm)). A scratch org lives 1 to 30 days, 7 by default.
 
 ## Single-org vs. multi-org
 
@@ -98,7 +100,7 @@ Release dates do not require release branches. In [B1](b1-simple-org-development
 These apply to every blueprint, and each one shapes at least one recommendation in this section.
 
 - **There is no true rollback.** You can deploy a destructive change, but you cannot undo a deployment. Every blueprint needs a backup and recovery answer with a stated RPO/RTO - the pipeline does not provide one.
-- **XML metadata merges badly.** Profiles, permission sets and flows are the usual casualties. Mitigate by keeping permissions in permission sets rather than profiles, by keeping long-lived branches few, and by using a Salesforce-aware merge driver where retrofits are routine.
+- **XML metadata merges badly.** Profiles, permission sets and flows are the usual casualties. Mitigate by keeping permissions in permission sets rather than profiles, by keeping long-lived branches few, and by using a Salesforce-aware merge driver where merges between long-lived branches are routine - the open-source [sf-git-merge-driver](https://github.com/scolladon/sf-git-merge-driver) merges profiles, permission sets, labels and value sets by key rather than line by line. Check its coverage for flows and layouts before relying on it there.
 - **Declarative change arrives outside Git.** Someone will build a flow in a sandbox and expect it to reach production. The strategy has to name who retrieves it and when, or it will be deployed by hand.
 - **Apex test runs are slow.** Long validation times push people to skip the gate. Mitigate with delta deployments (only changed metadata) and by scoping test levels to what the change can actually affect.
 - **Feature flags decouple deployment from release.** Custom permissions plus custom metadata types are the common implementation. The simplest variant is still the best one for small teams: do not deploy a feature until it is needed.
@@ -123,6 +125,8 @@ Condensed into the four levels the [questionnaire](index.md) asks about:
 4. **Optimised** - trunk-based, feature-flagged, delivery metrics tracked and improving against your own baseline.
 
 Use the metrics as **migration triggers**, not as a scoreboard. DORA itself no longer publishes industry performance tiers and warns against fixed targets and comparisons between teams - compare each team with its own baseline. Each blueprint page states which signals mean you are ready for the next one.
+
+Two practices matter at every level and in every blueprint, independent of the branching model: **backups** with a stated recovery point and recovery time, because Salesforce has no rollback, and **observability** - knowing within hours, not weeks, that a deployment broke something. In the available survey data, a consistent release process, a consolidated toolchain, backups and observability track with delivery performance more clearly than any branching model does.
 
 ## Salesforce DevOps Center
 

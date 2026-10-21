@@ -59,6 +59,8 @@ flowchart TD
 
 The sandbox cost scales with the number of orgs, and so does everything else: secrets, environments, deployment runs, on-call. Confirm that multi-org is a business requirement (data residency, compliance, genuinely divergent processes) and not the residue of an acquisition nobody has consolidated. See [Background](background.md#single-org-vs-multi-org).
 
+**Not every multi-org landscape needs this blueprint.** If your orgs share little or nothing - separate businesses that happen to run Salesforce - there is no core to share: treat each org as its own landscape and run the [questionnaire](index.md) once per org. And if you are consolidating orgs, run B4 as a time-boxed bridge toward [B2](b2-multi-team-environment-branches.md) or [B3](b3-modular-trunk.md), not as the destination.
+
 ## Repository topology
 
 Two workable shapes:

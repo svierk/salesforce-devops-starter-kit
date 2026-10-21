@@ -23,6 +23,8 @@ Each blueprint page carries the full, copy-pasteable callers. This page is the o
 | `severity-threshold`        |       `3`       |                  `3`                   |              `3`               |       `3`       |         `2`         |
 | `environment` on deployment |  `production`   |             one per stage              |          `production`          |   one per org   | `uat`, `production` |
 
+Keep `RunLocalTests` as the test level for production. `RunRelevantTests`, introduced as a beta in Spring '26, selects tests from the changed code - but Salesforce itself advises against using it in production pipelines yet. Try it in validation runs first.
+
 ::: tip Why delta on validation but mostly not on deployment
 Validating a pull request only needs to check what the branch changed - that is the fast feedback loop. A promotion between long-lived branches deploys the branch's whole state, because a delta there would silently skip anything an earlier hop missed.
 
