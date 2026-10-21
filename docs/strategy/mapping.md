@@ -6,27 +6,27 @@ Each blueprint page carries the full, copy-pasteable callers. This page is the o
 
 ## Reusable workflows per blueprint
 
-| Workflow                                                  | [B1](b1-simple-org-development.md) | [B2](b2-multi-team-environment-branches.md) | [B3](b3-package-based-modular.md) | [B4](b4-multi-org-regional.md) | [B5](b5-low-code-admin-first.md) |
-| --------------------------------------------------------- | :--------------------------------: | :-----------------------------------------: | :-------------------------------: | :----------------------------: | :------------------------------: |
-| [`pr-validation.yml`](/workflows/pr-validation)           |              required              |       required, on all 4 env branches       |             required              |   required, one job per org    |   required, relaxed threshold    |
-| [`deployment.yml`](/workflows/deployment)                 |             on `main`              |               per env branch                |      residual metadata only       |         per-org matrix         |       on `uat` and `main`        |
-| [`scratch-org-ci.yml`](/workflows/scratch-org-ci)         |              optional              |          optional, on `feature/*`           |         **primary gate**          |            core CI             |                -                 |
-| [`create-scratch-org.yml`](/workflows/create-scratch-org) |              optional              |                  optional                   |            recommended            |          recommended           |           recommended            |
+| Workflow                                                  | [B1](b1-simple-org-development.md) | [B2](b2-multi-team-environment-branches.md) |  [B3](b3-modular-trunk.md)   | [B4](b4-multi-org-regional.md) | [B5](b5-low-code-admin-first.md) |
+| --------------------------------------------------------- | :--------------------------------: | :-----------------------------------------: | :--------------------------: | :----------------------------: | :------------------------------: |
+| [`pr-validation.yml`](/workflows/pr-validation)           |              required              |       required, on all 4 env branches       |           required           |   required, one job per org    |   required, relaxed threshold    |
+| [`deployment.yml`](/workflows/deployment)                 |             on `main`              |               per env branch                | from `main` or a release tag |         per-org matrix         |       on `uat` and `main`        |
+| [`scratch-org-ci.yml`](/workflows/scratch-org-ci)         |              optional              |          optional, on `feature/*`           |     **gate for modules**     |            core CI             |                -                 |
+| [`create-scratch-org.yml`](/workflows/create-scratch-org) |              optional              |                  optional                   |         recommended          |          recommended           |           recommended            |
 
 ## Key input settings
 
-| Setting                     |       B1        |             B2              |       B3        |       B4        |         B5          |
-| --------------------------- | :-------------: | :-------------------------: | :-------------: | :-------------: | :-----------------: |
-| `delta` on validation       |     `true`      |           `true`            |     `true`      |     `true`      |       `true`        |
-| `delta` on deployment       |     `false`     | train `false`, story `true` |       n/a       |     `false`     |       `false`       |
-| `test-level`                | `RunLocalTests` |       `RunLocalTests`       | `RunLocalTests` | `RunLocalTests` |   `RunLocalTests`   |
-| `severity-threshold`        |       `3`       |             `3`             |       `3`       |       `3`       |         `2`         |
-| `environment` on deployment |  `production`   |        one per stage        |  `production`   |   one per org   | `uat`, `production` |
+| Setting                     |       B1        |                   B2                   |               B3               |       B4        |         B5          |
+| --------------------------- | :-------------: | :------------------------------------: | :----------------------------: | :-------------: | :-----------------: |
+| `delta` on validation       |     `true`      |                 `true`                 |             `true`             |     `true`      |       `true`        |
+| `delta` on deployment       |     `false`     | train `false`, story and bundle `true` | `true` (from the last release) |     `false`     |       `false`       |
+| `test-level`                | `RunLocalTests` |            `RunLocalTests`             |        `RunLocalTests`         | `RunLocalTests` |   `RunLocalTests`   |
+| `severity-threshold`        |       `3`       |                  `3`                   |              `3`               |       `3`       |         `2`         |
+| `environment` on deployment |  `production`   |             one per stage              |          `production`          |   one per org   | `uat`, `production` |
 
 ::: tip Why delta on validation but mostly not on deployment
 Validating a pull request only needs to check what the branch changed - that is the fast feedback loop. A promotion between long-lived branches deploys the branch's whole state, because a delta there would silently skip anything an earlier hop missed.
 
-[B2's story promotion](b2-multi-team-environment-branches.md#story-promotion) is the exception: environment branches are never merged into each other, so each push carries exactly what one pull request merged - usually one story. Deploy it as a delta with `delta-from: ${{ github.event.before }}`. Otherwise, `delta-from` is for the case where you deliberately want to deploy the difference since a release tag.
+[B2's story promotion and release bundle](b2-multi-team-environment-branches.md#three-ways-to-promote) are the exception: environment branches are never merged into each other, so each push carries exactly what one pull request merged - usually one story. Deploy it as a delta with `delta-from: ${{ github.event.before }}`. Otherwise, `delta-from` is for the case where you deliberately want to deploy the difference since a release tag.
 :::
 
 ## Building blocks
@@ -52,16 +52,16 @@ Package **version creation and promotion** (`sf package version create` / `promo
 
 Configure these under **Settings → Branches** for every long-lived branch in your blueprint.
 
-| Rule                           |     B1     |                    B2                     |             B3              |         B4         |         B5         |
-| ------------------------------ | :--------: | :---------------------------------------: | :-------------------------: | :----------------: | :----------------: |
-| Protected branches             |   `main`   |  `integration`, `uat`, `preprod`, `main`  |           `main`            |       `main`       |   `uat`, `main`    |
-| Default branch                 |   `main`   |   `integration` (train), `main` (story)   |           `main`            |       `main`       |       `uat`        |
-| Require a pull request         |    yes     |                    yes                    |             yes             |        yes         |        yes         |
-| Required approvals             |     1      |                     1                     |       1 (owning team)       |   1 (CODEOWNERS)   | 1 (pipeline owner) |
-| Required status checks         | validation |                validation                 | validation + scratch org CI | validation per org |     validation     |
-| Require up-to-date branches    |    yes     |                    yes                    |             yes             |        yes         |        yes         |
-| Restrict who can merge         |     -      | release manager on `uat`/`preprod`/`main` |              -              |     CODEOWNERS     |   pipeline owner   |
-| Block force pushes & deletions |    yes     |                    yes                    |             yes             |        yes         |        yes         |
+| Rule                           |     B1     |                      B2                       |             B3              |         B4         |         B5         |
+| ------------------------------ | :--------: | :-------------------------------------------: | :-------------------------: | :----------------: | :----------------: |
+| Protected branches             |   `main`   |    `integration`, `uat`, `preprod`, `main`    |           `main`            |       `main`       |   `uat`, `main`    |
+| Default branch                 |   `main`   | `integration` (train), `main` (story, bundle) |           `main`            |       `main`       |       `uat`        |
+| Require a pull request         |    yes     |                      yes                      |             yes             |        yes         |        yes         |
+| Required approvals             |     1      |                       1                       |       1 (owning team)       |   1 (CODEOWNERS)   | 1 (pipeline owner) |
+| Required status checks         | validation |                  validation                   | validation + scratch org CI | validation per org |     validation     |
+| Require up-to-date branches    |    yes     |                      yes                      |             yes             |        yes         |        yes         |
+| Restrict who can merge         |     -      |   release manager on `uat`/`preprod`/`main`   |              -              |     CODEOWNERS     |   pipeline owner   |
+| Block force pushes & deletions |    yes     |                      yes                      |             yes             |        yes         |        yes         |
 
 ## GitHub Environments
 

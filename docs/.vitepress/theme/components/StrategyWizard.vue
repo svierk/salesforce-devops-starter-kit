@@ -106,23 +106,23 @@ const QUESTIONS = {
   },
   release: {
     label: 'Release style',
-    title: 'How do you release?',
-    why: 'What a release is for you decides how changes travel to production. With several streams on one org it picks between two variants of the blueprint; everywhere else it shapes how you set the blueprint up.',
+    title: 'How do you ship to production?',
+    why: 'How changes are batched on their way to production. With several streams on one org it picks one of three variants of the blueprint; everywhere else it shapes how you set the blueprint up.',
     options: [
       {
         value: 'continuous',
-        label: 'Continuously, story by story',
-        detail: 'Each change ships as soon as it is ready and signed off.'
+        label: 'Story by story, all the way to production',
+        detail: 'Each change ships as soon as it is signed off.'
+      },
+      {
+        value: 'bundled',
+        label: 'Story by story to UAT, bundled into production',
+        detail: 'Stories are signed off one by one; production gets them together on a date.'
       },
       {
         value: 'scheduled',
-        label: 'On planned release dates',
-        detail: 'Changes collect and ship together; scope is frozen per release.'
-      },
-      {
-        value: 'packages',
-        label: 'As versioned packages',
-        detail: 'A release is a new package version, installed org by org.'
+        label: 'Whole releases on planned dates',
+        detail: 'Scope is frozen per release and tested as one.'
       }
     ]
   }
@@ -175,21 +175,36 @@ const BLUEPRINTS = {
           'A promotion workflow that opens its pull requests with a GitHub App token - `GITHUB_TOKEN` would skip the validation',
           'Merge `main` back into every environment branch after each production deployment'
         ]
+      },
+      bundle: {
+        name: 'Release Bundle',
+        anchor: '#release-bundle',
+        summary:
+          'Stories travel one by one up to UAT; on the release date, a bundle of the signed-off stories ships through pre-production into production.',
+        branches:
+          'Environment branches `integration`, `uat`, `preprod`, `main`; `feature/*` and `promotion/*` up to UAT, one `release/*` branch per date from there',
+        switchOn: [
+          '`pr-validation.yml` on pull requests into all four environment branches',
+          '`deployment.yml` per environment branch as a delta from `github.event.before`, one GitHub Environment per org',
+          'A release branch per date: cut from `main`, signed-off stories merged in, promoted to `preprod` and `main`',
+          'Merge `main` back into every environment branch after each production deployment'
+        ]
       }
     }
   },
   B3: {
     id: 'B3',
-    name: 'Package-Based / Modular',
-    link: '/strategy/b3-package-based-modular',
-    summary: 'Versioned unlocked packages, developed against scratch orgs, released independently.',
-    environments: 'Scratch orgs + one staging sandbox + production',
+    name: 'Modular Trunk',
+    link: '/strategy/b3-modular-trunk',
+    summary:
+      'Several teams on one always-releasable trunk, work behind feature flags, metadata cut into modules - packages only where the version boundary pays.',
+    environments: 'Scratch orgs or developer sandboxes + one staging sandbox + production',
     branches: 'Trunk-based - `main` plus short-lived, feature-flagged branches',
     switchOn: [
-      '`scratch-org-ci.yml` as the primary gate on every pull request',
-      '`pr-validation.yml` alongside it for fast static-analysis feedback',
-      '`create-scratch-org.yml` for developer self-service',
-      'Note: `sf package version create` / `promote` has no building block yet - plain CLI step'
+      '`pr-validation.yml` as a blocking required check on every pull request into `main`',
+      '`scratch-org-ci.yml` to prove each module builds on its declared dependencies alone',
+      '`deployment.yml` from `main` or a release tag, as a delta from the last release',
+      'Feature flags as custom permissions, switched on by assigning a permission set'
     ]
   },
   B4: {
@@ -258,17 +273,18 @@ function blueprintFor(a) {
     // Build style does not change the blueprint for several teams - it adds the
     // tool-driven promotion note to the result instead.
     if (a.maturity === 'starting') return 'B2';
+    // Level 4 already works trunk-based; modularity only decides the artifact.
+    if (a.maturity === 'advanced') return 'B3';
     if (a.modularity === 'modular') return 'B3';
     if (a.modularity === 'monolith') return 'B2';
   }
   return null;
 }
 
-/** B2's variant follows the release style; versioned packages without modular
- * metadata ship on release dates until B3 is in reach. */
+/** B2's variant follows the release style. */
 function variantFor(a) {
   if (blueprintFor(a) !== 'B2' || !a.release) return null;
-  return a.release === 'continuous' ? 'story' : 'train';
+  return { continuous: 'story', bundled: 'bundle', scheduled: 'train' }[a.release] ?? null;
 }
 
 const steps = computed(() => stepsFor(answers.value));
@@ -359,10 +375,11 @@ const EDGE = {
   modular: 6,
   notModular: 7,
   storyByStory: 8,
-  releaseDates: 9
+  bundled: 9,
+  wholeReleases: 10
 };
 
-const ALL_NODES = ['QO', 'QT', 'QL', 'QM', 'QR', 'B1', 'B2S', 'B2T', 'B3', 'B4', 'B5'];
+const ALL_NODES = ['QO', 'QT', 'QL', 'QM', 'QR', 'B1', 'B2S', 'B2B', 'B2T', 'B3', 'B4', 'B5'];
 const ALL_EDGES = Object.values(EDGE);
 
 // Mermaid needs literal colors, so the brand tokens from theme/custom.css are
@@ -432,7 +449,8 @@ function takenPath() {
     if (id === 'B2') {
       take(EDGE.notModular, 'QR');
       if (a.release === 'continuous') take(EDGE.storyByStory, 'B2S');
-      else if (a.release) take(EDGE.releaseDates, 'B2T');
+      if (a.release === 'bundled') take(EDGE.bundled, 'B2B');
+      if (a.release === 'scheduled') take(EDGE.wholeReleases, 'B2T');
     }
   }
   return { nodes, edges };
@@ -445,7 +463,7 @@ function treeSource(isDark) {
   // ends at QR without a result.
   const variant = variantFor(answers.value);
   const id = blueprintFor(answers.value);
-  const resultId = id === 'B2' ? (variant ? (variant === 'story' ? 'B2S' : 'B2T') : null) : id;
+  const resultId = id === 'B2' ? ({ story: 'B2S', bundle: 'B2B', train: 'B2T' }[variant] ?? null) : id;
 
   const lines = [
     'flowchart TD',
@@ -453,13 +471,14 @@ function treeSource(isDark) {
     '    QO -->|Several| B4["<b>B4</b><br/>Multi-Org / Regional"]',
     '    QO -->|One| QT{"How many teams or<br/>parallel workstreams?"}',
     '    QT -->|One| QL{"Mostly admins and<br/>low-code builders?"}',
-    '    QT -->|Several| QM{"Level 2+ and metadata<br/>modular enough for packages?"}',
+    '    QT -->|Several| QM{"Level 4, or level 2-3<br/>with modular metadata?"}',
     '    QL -->|Yes| B5["<b>B5</b><br/>Low-Code First"]',
     '    QL -->|No| B1["<b>B1</b><br/>Simple Org Development"]',
-    '    QM -->|Yes| B3["<b>B3</b><br/>Package-Based / Modular"]',
-    '    QM -->|Not yet| QR{"Ship story by story<br/>or on release dates?"}',
+    '    QM -->|Yes| B3["<b>B3</b><br/>Modular Trunk"]',
+    '    QM -->|Not yet| QR{"How do you ship<br/>to production?"}',
     '    QR -->|Story by story| B2S["<b>B2</b><br/>Environment Branches<br/>· Story Promotion"]',
-    '    QR -->|Release dates| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
+    '    QR -->|Bundled from UAT| B2B["<b>B2</b><br/>Environment Branches<br/>· Release Bundle"]',
+    '    QR -->|Whole releases| B2T["<b>B2</b><br/>Environment Branches<br/>· Release Train"]',
     `    classDef neutral fill:${c.neutralFill},stroke:${c.neutralStroke},color:${c.neutralText};`,
     `    classDef active fill:${c.activeFill},stroke:${c.activeStroke},color:${c.activeText},stroke-width:2px;`,
     `    classDef result fill:${c.resultFill},stroke:${c.resultStroke},color:${c.resultText},stroke-width:2px,font-weight:bold;`,
@@ -595,21 +614,22 @@ watch(
         - nobody should have to resolve an XML conflict by hand - and adopt the
         <a :href="withBase('/strategy/b5-low-code-admin-first#working-agreements')">working agreements of B5</a>.
       </p>
+      <p v-if="blueprint.id === 'B3' && answers.modularity === 'monolith'" class="wizard-note">
+        <strong>Because your metadata is not modular yet:</strong> run the trunk as one source tree - incomplete work
+        behind feature flags, schema changes additive only - and cut out modules as boundaries emerge.
+      </p>
       <p v-if="answers.release === 'scheduled'" class="wizard-note">
         <strong>Because you release on planned dates:</strong> decouple merging from releasing. Changes collect in front
         of production and ship together on the date, behind a <em>production</em> GitHub Environment with required
         reviewers. Freeze each release's scope with a branch or a tag, so the next one can keep moving.
       </p>
-      <p v-else-if="answers.release === 'packages'" class="wizard-note">
-        <strong>Because you release versioned packages:</strong> a release is a promoted package version, not a merge.
-        Pin versions per org, and gate production installs behind a GitHub Environment with required reviewers.
-        <template v-if="blueprint.id !== 'B3' && blueprint.id !== 'B4'">
-          Packaging needs modular metadata - <a :href="withBase('/strategy/b3-package-based-modular')">B3</a> shows the
-          way there.
-        </template>
+      <p v-else-if="answers.release === 'bundled'" class="wizard-note">
+        <strong>Because you bundle for production:</strong> sign-off stays per story, but production gets a frozen
+        bundle on the release date - cut it from <code>main</code>, merge in only the signed-off stories, and ship it
+        behind a <em>production</em> GitHub Environment with required reviewers.
       </p>
       <p v-else class="wizard-note">
-        <strong>Because you ship continuously:</strong> merging - or promoting a story to production - is the release
+        <strong>Because you ship story by story:</strong> merging - or promoting a story to production - is the release
         decision, so the validation check has to genuinely block. Keep a <em>production</em> GitHub Environment anyway:
         it gives you a deployment history, a pause button and, with required reviewers, your approval gate.
       </p>

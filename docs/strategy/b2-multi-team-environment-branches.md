@@ -2,36 +2,37 @@
 
 Several streams, one long-lived Git branch per org, and an explicit release decision. The classic enterprise Salesforce setup - and the one that costs the most to operate, so adopt it only for the stages your approval process actually requires.
 
-The environment branches are the same either way. What differs is **what travels between them**, and that follows from [how you release](questions.md#_5-how-do-you-release):
+The environment branches are the same in every variant. What differs is **what travels between them**, and that follows from [how you release](questions.md#_5-how-do-you-release):
 
 - **[Release train](#release-train)** - the whole state of a branch moves up the chain, stage by stage, on planned release dates. It is the default model of the open-source [sfdx-hardis](https://sfdx-hardis.cloudity.com/salesforce-devops-deploy-major-branches/).
 - **[Story promotion](#story-promotion)** - every user story travels on its own, into each stage through a short-lived promotion branch, and reaches production when it is ready. [Gearset Pipelines](https://docs.gearset.com/en/articles/6115722-the-gearset-pipelines-branching-model) implements it almost exactly; Copado and DevOps Center follow the same principle with different mechanics. Here it runs on plain GitHub and the kit's workflows.
+- **[Release bundle](#release-bundle)** - stories travel one by one up to UAT, where they are signed off individually; on the release date, a release branch carries the signed-off stories as one bundle through pre-production into production. DevOps Center builds the same idea in as a "bundling stage".
 
 ## At a glance
 
-|                   |                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------- |
-| **Team size**     | 5-25 developers and admins across several streams                                  |
-| **Environments**  | Integration + UAT + pre-production + production                                    |
-| **Branch model**  | Four environment branches: `integration`, `uat`, `preprod`, `main`                 |
-| **Release style** | Release train: planned release dates · Story promotion: continuous, story by story |
-| **Maturity**      | Level 2-3 - at level 1, start with two stages (see below)                          |
-| **Prerequisites** | Sandbox budget - see the licence warning below                                     |
+|                   |                                                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Team size**     | 5-25 developers and admins across several streams                                                                          |
+| **Environments**  | Integration + UAT + pre-production + production                                                                            |
+| **Branch model**  | Four environment branches: `integration`, `uat`, `preprod`, `main`                                                         |
+| **Release style** | Story promotion: story by story · Release bundle: per story to UAT, bundled into production · Release train: release dates |
+| **Maturity**      | Level 2-3 - at level 1, start with two stages (see below)                                                                  |
+| **Prerequisites** | Sandbox budget - see the licence warning below                                                                             |
 
-## Two ways to promote
+## Three ways to promote
 
-|                            | Release train                                   | Story promotion                                                 |
-| -------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| What moves                 | The whole state of a branch                     | One user story, separately into each stage                      |
-| Feature branches start at  | `integration`                                   | `main` - the production state                                   |
-| Stage-to-stage merges      | Yes, strictly up the chain                      | Never - environment branches are not merged into each other     |
-| Deployment between stages  | Full                                            | Delta - only what the story brought                             |
-| A story that is not ready  | Holds the train, or has to be backed out        | Holds only itself                                               |
-| Where conflicts are solved | In the target branch, once per hop              | In the story's promotion branch, once per stage                 |
-| Urgent fixes               | Separate hotfix path with a hard constraint     | A story like any other, promoted only as far as it needs        |
-| Fits                       | Planned release dates, scope frozen per release | Continuous delivery of independent stories, with approval gates |
+|                            | Story promotion                                                 | Release bundle                                                                  | Release train                                   |
+| -------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| What moves                 | One user story, separately into each stage                      | One story at a time up to UAT; from there, the signed-off stories as one bundle | The whole state of a branch                     |
+| Feature branches start at  | `main` - the production state                                   | `main` - the production state                                                   | `integration`                                   |
+| Stage-to-stage merges      | Never - environment branches are not merged into each other     | Never - up to UAT per story, from there one release branch per date             | Yes, strictly up the chain                      |
+| Deployment between stages  | Delta - only what the story brought                             | Delta - the story, then the bundle                                              | Full                                            |
+| A story that is not ready  | Holds only itself                                               | Stays out of the bundle and waits for the next date                             | Holds the train, or has to be backed out        |
+| Where conflicts are solved | In the story's promotion branch, once per stage                 | In promotion branches up to UAT, then once more in the release branch           | In the target branch, once per hop              |
+| Urgent fixes               | A story like any other, promoted only as far as it needs        | A story promoted straight on, or a small bundle of its own                      | Separate hotfix path with a hard constraint     |
+| Fits                       | Continuous delivery of independent stories, with approval gates | Sign-off per story, production on release dates                                 | Planned release dates, scope frozen per release |
 
-If you ship on release dates, run the train. If stories should reach production as soon as they are signed off, run story promotion. Switching later does not touch the orgs or the environment branches - only how changes travel between them.
+If stories should reach production as soon as they are signed off, run story promotion. If stories are signed off one by one but production gets them on dates, run the release bundle. If whole releases are planned and tested as one, run the train. Switching later does not touch the orgs or the environment branches - only how changes travel between them.
 
 ## Target picture
 
@@ -93,6 +94,34 @@ flowchart LR
     classDef branch fill:#ebe4fa,stroke:#5b21d6,color:#24104f;
     class INT,UAT,PP,MAIN org;
     class F,P1,P2,P3 branch;
+```
+
+### Release bundle
+
+```mermaid
+flowchart LR
+    F1["feature/story-123"]
+    F2["feature/story-456"]
+
+    INT["integration<br/><i>Integration Sandbox</i>"]
+    UAT["uat<br/><i>UAT Sandbox (Partial/Full)</i>"]
+    REL["release/2026-11<br/><i>branched from main</i>"]
+    PP["preprod<br/><i>PreProd Sandbox (Full)</i>"]
+    MAIN["main<br/><i>Production</i>"]
+
+    F1 -->|"promotion branches"| INT
+    F1 -->|"promotion branches"| UAT
+    F2 -->|"promotion branches"| INT
+    F2 -->|"promotion branches"| UAT
+    F1 -->|"signed off: merge"| REL
+    F2 -->|"signed off: merge"| REL
+    REL -->|"PR + delta deploy"| PP
+    REL -->|"PR + delta deploy"| MAIN
+
+    classDef org fill:#dde4f9,stroke:#1d4ed8,color:#0b1a4a;
+    classDef branch fill:#ebe4fa,stroke:#5b21d6,color:#24104f;
+    class INT,UAT,PP,MAIN org;
+    class F1,F2,REL branch;
 ```
 
 ## Org & sandbox landscape
@@ -166,6 +195,17 @@ To production, the feature branch itself goes into `main` - through a promotion 
 
 **Sync after every release.** Each stage holds a different set of stories, so the environment branches drift apart by design. After each production deployment, merge `main` back into every environment branch through a pull request. It keeps each stage at "production plus the stories in flight", and it stops the same conflict from coming back at every stage.
 
+### Release bundle
+
+Up to `uat`, stories travel exactly as in [story promotion](#story-promotion-1): feature branches from `main`, one promotion branch per story and stage. On the release date the bundle takes over:
+
+1. Cut `release/<date>` from `main`.
+2. Merge every story that passed its UAT sign-off into it. Conflicts between the stories of this release are solved here, once.
+3. Open a pull request into `preprod`. Once the rehearsal passes, open the next one from the same release branch into `main`.
+4. Delete the release branch, and sync `main` back into every environment branch as in story promotion.
+
+What reaches `preprod` is byte for byte what reaches `main` - the gap story promotion leaves between test stage and production closes at the last two stages. A story that misses its sign-off simply stays out of the bundle and waits for the next date.
+
 ## Promotion path & roles
 
 | Role            | Release train                                                                              | Story promotion                                                           |
@@ -175,6 +215,8 @@ To production, the feature branch itself goes into `main` - through a promotion 
 | Release manager | Owns the stage-to-stage promotions, decides what enters the train, runs the approval gates | Decides which stories enter `preprod` and `main`, runs the approval gates |
 | Business owner  | Signs off in UAT - the gate that justifies the stage existing                              | Signs off each story in UAT                                               |
 
+The **release bundle** follows the story promotion roles up to `uat`; from there, the release manager owns the release branch and decides which signed-off stories go into it.
+
 Grant merge rights on `uat`, `preprod` and `main` to the release manager role only. `integration` stays open to the team - that is the point of having it.
 
 ## Strengths
@@ -183,6 +225,7 @@ Grant merge rights on `uat`, `preprod` and `main` to the release manager role on
 - Maps onto approval and segregation-of-duties requirements without inventing process.
 - **Release train:** conflicts surface in `integration`, early and cheaply, rather than during a release. BUILD and RUN separate cleanly, so an urgent fix does not have to wait for the train.
 - **Story promotion:** stories move independently - one that fails UAT holds nobody else back. `main` only ever receives stories, never the leftovers of a lower stage. Urgent fixes need no special path.
+- **Release bundle:** sign-off stays per story, yet production receives exactly the bundle that was rehearsed in `preprod`. A story that is not ready never blocks the date.
 
 ## Trade-offs & anti-patterns
 
@@ -193,6 +236,7 @@ Grant merge rights on `uat`, `preprod` and `main` to the release manager role on
 - **Release train: do not test large features directly in `preprod`.** It blocks the RUN stream and skips the UAT gate.
 - **Story promotion: what you tested is not byte for byte what you ship.** Each stage resolves its own conflicts, so `uat` and `main` can differ in more than the stories they hold. The sync after every release keeps that gap small; skipping it makes it grow.
 - **Story promotion: dependent stories need a rule.** If story B builds on story A, promoting B alone breaks the stage. Track the dependency on the work item, and promote A first.
+- **Release bundle: stories are merged twice.** Once per stage up to `uat`, then again into the release branch - conflicts can need solving at both points. Small, independent stories keep that cheap.
 - **Story promotion: do not promote by hand at scale.** Four promotion branches per story is toil. Automate the steps above, and see the caveat under Kit mapping.
 
 ## Kit mapping
@@ -253,7 +297,7 @@ jobs:
     secrets: inherit
 ```
 
-For **story promotion**, deploy the delta of each merge instead - the story plus any conflict resolution from its promotion branch. `github.event.before` is the state of the environment branch before the push:
+For **story promotion** and the **release bundle**, deploy the delta of each merge instead - the story or the bundle, plus any conflict resolution from its promotion or release branch. `github.event.before` is the state of the environment branch before the push:
 
 ```yaml
       delta: true
@@ -275,15 +319,15 @@ Environment secrets only reach the deployments. The PR validation above reads th
 - Require branches to be up to date before merging
 - Restrict who can merge into `uat`, `preprod` and `main` to the release manager role
 - Block force pushes and deletions
-- Default branch: `integration` for the release train, `main` for story promotion
+- Default branch: `integration` for the release train, `main` for story promotion and the release bundle
 
 **Optional:** [`scratch-org-ci.yml`](/workflows/scratch-org-ci) on `feature/*` pushes as fast CI before the first promotion - it creates a clean org, deploys, tests and deletes it, so a story is tested in isolation before it reaches shared `integration`.
 
 ## Migration path
 
-**Between the variants** - in either direction, at any time. The orgs and the environment branches stay; only the way changes travel between them changes. Teams often start on the train and move to story promotion once stories are small and independent enough to ship one by one.
+**Between the variants** - in either direction, at any time. The orgs and the environment branches stay; only the way changes travel between them changes. Teams often start on the train, move to the release bundle once stories are signed off individually, and to story promotion once they are small and independent enough to ship one by one.
 
-**To [B3](b3-package-based-modular.md)** - the intended destination. Extract the first unlocked package from the happy soup, move its development to scratch orgs, and as packages take over, collapse the stages: `uat` usually goes first, then `preprod`.
+**To [B3](b3-modular-trunk.md)** - the usual destination. Cut the first module out of the happy soup - as source, or as an org-dependent unlocked package if it is tightly coupled - and as modules and feature flags take over, collapse the stages: `uat` usually goes first, then `preprod`.
 
 **Signals you are ready:** deployment frequency, lead time and change fail rate improving over several quarters, measured against your own baseline, and metadata that has proven separable in practice - not just on a whiteboard.
 

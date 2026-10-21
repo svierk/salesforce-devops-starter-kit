@@ -46,6 +46,8 @@ The established framing comes from operating-model theory - business process **i
 | Release coupling | One release train                                | Packages release independently                      |
 | Fits             | Single team, legacy orgs, declarative-heavy work | Several teams, modular metadata, decoupled roadmaps |
 
+Between the two sits **modular source**: package directories in `sfdx-project.json`, deployed as source rather than built as package versions. It gives you most of the structure of package development without its build and promotion cost, and it is the default artifact in [B3](b3-modular-trunk.md#what-you-ship).
+
 **When to switch:** growing org complexity, several teams or admins stepping on each other, and a wish to decouple a project from the big release train.
 
 **What blocks the switch:**
@@ -62,12 +64,13 @@ The established framing comes from operating-model theory - business process **i
 | **Git Flow**                               | `main` + `develop` + release and hotfix branches                                                           | Structured sprint releases, larger teams                                                                                                                                           | Two permanent branches to keep in sync; heavy for most Salesforce teams                |
 | **Environment branches - release train**   | One long-lived branch per org; the whole state moves stage to stage                                        | Planned release dates with approval gates, [B2](b2-multi-team-environment-branches.md#release-train)                                                                               | Permanent merge overhead - see the warning below                                       |
 | **Environment branches - story promotion** | One long-lived branch per org; each story is merged into each stage through a short-lived promotion branch | Independent stories with approval gates, [B2](b2-multi-team-environment-branches.md#story-promotion); the model of Gearset Pipelines, and in principle of Copado and DevOps Center | Stages drift apart by design - sync them after every release                           |
-| **Trunk-based**                            | One branch + feature flags                                                                                 | High maturity, [B3](b3-package-based-modular.md)                                                                                                                                   | Requires real discipline and a quality gate that actually blocks                       |
+| **Environment branches - release bundle**  | Story promotion up to UAT; from there, a release branch carries the signed-off stories as one bundle       | Sign-off per story, production on release dates, [B2](b2-multi-team-environment-branches.md#release-bundle); DevOps Center's "bundling stage"                                      | Stories are merged twice - per stage and into the release branch                       |
+| **Trunk-based**                            | One branch + feature flags, modules or packages optional                                                   | High maturity, [B3](b3-modular-trunk.md)                                                                                                                                           | Requires real discipline and a quality gate that actually blocks                       |
 
 ::: warning Branch-per-org as an org mirror is an anti-pattern
 Mapping one long-lived Git branch to each Salesforce org is the most common Salesforce branching model, and most teams adopt it without examining why. The model itself is workable. What fails is the version where promotions stop being reviewed pull requests and the branches become a copy of whatever is in each org - Git as a metadata backup rather than as a review mechanism.
 
-What keeps it healthy is automation and discipline: every promotion a reviewed pull request, conflicts resolved in a defined place, and a regular sync so the branches cannot drift apart. DevOps platforms (Copado, Gearset Pipelines and similar) provide that out of the box; with GitHub Actions and this kit you provide it yourself - [B2](b2-multi-team-environment-branches.md) shows both variants.
+What keeps it healthy is automation and discipline: every promotion a reviewed pull request, conflicts resolved in a defined place, and a regular sync so the branches cannot drift apart. DevOps platforms (Copado, Gearset Pipelines and similar) provide that out of the box; with GitHub Actions and this kit you provide it yourself - [B2](b2-multi-team-environment-branches.md) shows all three variants.
 
 If you land on an environment-style model - [B2](b2-multi-team-environment-branches.md) or [B5](b5-low-code-admin-first.md) - adopt it deliberately and keep the number of stages to the minimum that your approval process actually requires.
 :::
@@ -76,11 +79,13 @@ If you land on an environment-style model - [B2](b2-multi-team-environment-branc
 
 How you release is a separate choice from how you branch, and it narrows the branching options more than people expect. [Question 5](questions.md#_5-how-do-you-release) asks it.
 
-| Release style          | A release is                                     | Fits                                                                                                                                              |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Continuous**         | One change, shipped as soon as it is ready       | [B1](b1-simple-org-development.md), [B2 story promotion](b2-multi-team-environment-branches.md#story-promotion), [B5](b5-low-code-admin-first.md) |
-| **Release dates**      | A dated bundle with a frozen scope               | [B2 release train](b2-multi-team-environment-branches.md#release-train), [B4](b4-multi-org-regional.md) rollouts per org                          |
-| **Versioned packages** | A promoted package version, installed org by org | [B3](b3-package-based-modular.md), the shared core in [B4](b4-multi-org-regional.md)                                                              |
+| Release style               | A release is                                              | Fits                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Story by story**          | One change, shipped as soon as it is signed off           | [B1](b1-simple-org-development.md), [B2 story promotion](b2-multi-team-environment-branches.md#story-promotion), [B3](b3-modular-trunk.md), [B5](b5-low-code-admin-first.md) |
+| **Bundled into production** | Stories signed off one by one, shipped together on a date | [B2 release bundle](b2-multi-team-environment-branches.md#release-bundle), [B3](b3-modular-trunk.md) with a tag per release date                                             |
+| **Whole releases**          | A planned, frozen scope tested as one                     | [B2 release train](b2-multi-team-environment-branches.md#release-train), [B4](b4-multi-org-regional.md) rollouts per org                                                     |
+
+Package versions are an artifact, not a release style - they can ship in any of the three ways. Whether to package is a question of modularity, covered in [B3](b3-modular-trunk.md#what-you-ship).
 
 Release dates do not require release branches. In [B1](b1-simple-org-development.md), merging stays continuous and only the production deployment waits for the date - run it from a release tag or a manually triggered workflow, behind a GitHub Environment with required reviewers.
 

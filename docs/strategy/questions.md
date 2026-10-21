@@ -6,7 +6,7 @@ The [guided questionnaire](index.md#find-your-blueprint) asks these one at a tim
 
 Each question is deliberately coarse - it is meant to narrow the field in a few minutes, not to model your organisation exactly. Record your answers; [Kit Mapping](mapping.md) turns them into a concrete configuration.
 
-The order matters. Question 1 comes first because your org landscape is an architecture decision your DevOps model has to follow, not the other way round - a multi-org shop lands on [B4](b4-multi-org-regional.md) whatever its other answers, so the questionnaire stops asking. Within one org, questions 2-4 decide the blueprint; question 5 decides how you release on it - and, for [B2](b2-multi-team-environment-branches.md), which of its two variants you run.
+The order matters. Question 1 comes first because your org landscape is an architecture decision your DevOps model has to follow, not the other way round - a multi-org shop lands on [B4](b4-multi-org-regional.md) whatever its other answers, so the questionnaire stops asking. Within one org, questions 2-4 decide the blueprint; question 5 decides how you release on it - and, for [B2](b2-multi-team-environment-branches.md), which of its three variants you run.
 
 ## 1. Single-org or multi-org?
 
@@ -29,7 +29,7 @@ Team count is the strongest driver of how many long-lived branches you need. A s
 Every additional long-lived branch costs you merge effort and XML conflict risk on profiles, permission sets and flows, permanently. Add one only when parallel streams genuinely force it.
 
 > **(a)** → toward [B1](b1-simple-org-development.md), or [B5](b5-low-code-admin-first.md) if much of the work is declarative.
-> **(b)** → toward [B2](b2-multi-team-environment-branches.md), or [B3](b3-package-based-modular.md) if the metadata is modular.
+> **(b)** → toward [B2](b2-multi-team-environment-branches.md), or [B3](b3-modular-trunk.md) if the team is ready for one trunk.
 
 ## 3. Pro-code or low-code and admin share?
 
@@ -56,36 +56,40 @@ Maturity sets both the _number_ of environments you can operate and the deployme
 
 **Modularity:** **(a) Modular - the metadata factors into separable parts in practice** · **(b) Not yet - one interwoven "happy soup"**
 
-Packaging is what removes long-lived branches, and it needs metadata that genuinely splits apart - not just on a whiteboard. This only matters once the basics are in place, so the questionnaire skips it at level 1.
+Modules are what let several teams share one trunk and release independently, and they need metadata that genuinely splits apart - not just on a whiteboard. This only matters once the basics are in place, so the questionnaire skips it at level 1. Packaging is one way to ship modules, not a requirement - see [B3](b3-modular-trunk.md#what-you-ship).
 
 > Several teams at **level 1** → [B2](b2-multi-team-environment-branches.md), but start with two stages and add more as the practice matures.
-> Several teams, **level 2 or higher**, **modular** → [B3](b3-package-based-modular.md); **not yet** → [B2](b2-multi-team-environment-branches.md).
+> Several teams at **level 2-3** → [B3](b3-modular-trunk.md) if the metadata is **modular**, [B2](b2-multi-team-environment-branches.md) if **not yet**.
+> Several teams at **level 4** → [B3](b3-modular-trunk.md) either way - you already work trunk-based. Without modular metadata, run the trunk as one source tree with feature flags, and cut out modules as boundaries emerge.
 
 ## 5. How do you release?
 
-**(a) Continuously - each change ships as soon as it is ready** · **(b) On planned release dates - changes ship together** · **(c) As versioned packages - a release is a new package version**
+**(a) Story by story, all the way to production** · **(b) Story by story to UAT, bundled into production** · **(c) Whole releases on planned dates**
 
-This is not the same as how often you deploy. It asks what a release _is_ for you: a single change that is ready, a dated bundle with a frozen scope, or a package version with its own number.
+This is not the same as how often you deploy. It asks how changes are batched on their way to production - one at a time, signed off one at a time but shipped together, or planned and tested as one release from the start.
 
-- **(a) Continuously** - merging, or promoting a story to production, is the release decision. That needs a validation gate that genuinely blocks, and changes small and independent enough to ship one by one.
-- **(b) On release dates** - changes collect in front of production and ship together. That needs a place to freeze scope while the next release keeps moving: a release branch, a tag, or the stage in front of production.
-- **(c) As versioned packages** - a release is a promoted package version, installed org by org. That needs modular metadata; it is the model of [B3](b3-package-based-modular.md) and of the shared core in [B4](b4-multi-org-regional.md).
+- **(a) Story by story** - merging, or promoting a story to production, is the release decision. That needs a validation gate that genuinely blocks, and changes small and independent enough to ship one by one.
+- **(b) Bundled into production** - stories are signed off individually, but production receives them together on a date. This is the most common pattern in practice: it keeps sign-off fine-grained and production changes predictable.
+- **(c) Whole releases** - scope is planned and frozen per release, and the release is tested as one. That needs a place to freeze scope while the next release keeps moving: a release branch, a tag, or the stage in front of production.
 
-> Several streams on one org → this picks the [B2](b2-multi-team-environment-branches.md) variant: **(a)** → story promotion, **(b)** → release train. **(c)** without modular metadata points at B3 as the destination - run the release train until you get there.
+> Several streams on one org → this picks the [B2](b2-multi-team-environment-branches.md) variant: **(a)** → story promotion, **(b)** → release bundle, **(c)** → release train.
 > Everywhere else it does not change the blueprint, but it changes how you set it up - the questionnaire's result says how.
+
+Package versions are not a fourth answer. They are an artifact, not a cadence - you can ship them in any of these three ways. Whether you package at all is part of [question 4](#_4-how-mature-is-your-devops-practice-and-how-modular-is-your-metadata) and of [B3](b3-modular-trunk.md#what-you-ship).
 
 **Compliance is a separate matter.** If regulation (SOX and similar) requires that the author of a change is not the person who promotes it to production, add required reviewers to the GitHub Environment in front of production. That works with every release style and every blueprint - it maps onto environments, not onto extra branches.
 
 ## Putting it together
 
-| Your answers (Q1-Q5)                                           | Blueprint                                                    |
-| -------------------------------------------------------------- | ------------------------------------------------------------ |
-| Single-org · one team · pro-code · any · continuous            | [B1](b1-simple-org-development.md)                           |
-| Single-org · one team · low-code · any · any                   | [B5](b5-low-code-admin-first.md)                             |
-| Single-org · several · any · L1 · any                          | [B2](b2-multi-team-environment-branches.md), two stages      |
-| Single-org · several · any · L2+, not modular · release dates  | [B2](b2-multi-team-environment-branches.md), release train   |
-| Single-org · several · any · L2+, not modular · story by story | [B2](b2-multi-team-environment-branches.md), story promotion |
-| Single-org · several · any · L2+, modular · packages           | [B3](b3-package-based-modular.md)                            |
-| Multi-org · any                                                | [B4](b4-multi-org-regional.md)                               |
+| Your answers (Q1-Q5)                                            | Blueprint                                                             |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Single-org · one team · pro-code · any · any                    | [B1](b1-simple-org-development.md)                                    |
+| Single-org · one team · low-code · any · any                    | [B5](b5-low-code-admin-first.md)                                      |
+| Single-org · several · any · L1 · any                           | [B2](b2-multi-team-environment-branches.md), starting with two stages |
+| Single-org · several · any · L2-3, not modular · story by story | [B2](b2-multi-team-environment-branches.md), story promotion          |
+| Single-org · several · any · L2-3, not modular · bundled        | [B2](b2-multi-team-environment-branches.md), release bundle           |
+| Single-org · several · any · L2-3, not modular · whole releases | [B2](b2-multi-team-environment-branches.md), release train            |
+| Single-org · several · any · L2-3 modular, or L4 · any          | [B3](b3-modular-trunk.md)                                             |
+| Multi-org · any                                                 | [B4](b4-multi-org-regional.md)                                        |
 
 If your answers straddle two rows, pick the simpler blueprint and read the more complex one's migration section for what to watch for.

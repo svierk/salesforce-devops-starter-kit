@@ -142,6 +142,6 @@ jobs:
 
 **To [B2](b2-multi-team-environment-branches.md)** when a second stream appears and you start holding merges back to avoid shipping someone else's half-finished work, or when a stakeholder needs a stage to sign off in before production.
 
-**To [B3](b3-package-based-modular.md)** directly, skipping B2, if your metadata is already modular and you would rather invest in packaging than in stages. This is the better move if the pressure is "teams block each other" rather than "we need an approval gate".
+**To [B3](b3-modular-trunk.md)** directly, skipping B2, if your metadata is already modular - or the team is disciplined enough to keep one trunk releasable with feature flags - and you would rather invest in modules than in stages. This is the better move if the pressure is "teams block each other" rather than "we need an approval gate".
 
 **Signals to watch:** rising change fail rate, pull requests waiting on each other, or the phrase "let's not merge that yet" becoming routine.

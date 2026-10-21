@@ -82,7 +82,7 @@ config/
 
 ## Branch model
 
-- `main` is the trunk for the core, exactly as in [B3](b3-package-based-modular.md).
+- `main` is the trunk for the core, exactly as in [B3](b3-modular-trunk.md).
 - `release/<org>` branches are **short-lived** - created for a rollout, merged or deleted after it lands. They exist to pin the core version an org is adopting and to carry rollout-specific fixes.
 - Org-local metadata under `orgs/<region>/` changes on `main` too. It is scoped by path, not by branch.
 
@@ -90,7 +90,7 @@ config/
 
 ### Per-org environment chains
 
-When each org has its own team, its own sandbox chain and its own approval process, run [B2](b2-multi-team-environment-branches.md) **once per org, in that org's own repository** - as a release train or with story promotion, whichever fits how that org releases. The orgs stay independent the way separate repositories are independent, not through branches.
+When each org has its own team, its own sandbox chain and its own approval process, run [B2](b2-multi-team-environment-branches.md) **once per org, in that org's own repository** - with whichever of its three variants fits how that org releases. The orgs stay independent the way separate repositories are independent, not through branches.
 
 What remains shared is the common metadata. Keep it in its own repository with its own review, and decide once how it reaches the orgs: as a package version each org pins, or as source deployed together with each org's metadata. Either way, a change to shared metadata is a change to every org - validate it against each of them before it lands.
 
@@ -171,12 +171,12 @@ Store each org's `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` 
 
 **Path-filter the CI.** A change under `orgs/eu/` should not trigger validation for NA and APAC. Use `paths:` on the caller workflows - without it, every pull request runs the full matrix and the feedback loop becomes unusable.
 
-**Branch protection on `main`:** as [B3](b3-package-based-modular.md), plus [`CODEOWNERS`](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) mapping `packages/core/` to the core team and each `orgs/<region>/` to its regional team. In a monorepo, CODEOWNERS is what makes ownership boundaries real.
+**Branch protection on `main`:** as [B3](b3-modular-trunk.md), plus [`CODEOWNERS`](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) mapping `packages/core/` to the core team and each `orgs/<region>/` to its regional team. In a monorepo, CODEOWNERS is what makes ownership boundaries real.
 
 ## Migration path
 
 **This is usually a terminal state** - you arrive here because of business structure, and you leave only if that structure changes.
 
-**Toward consolidation:** if the regions' processes converge, the honest move is to merge orgs and drop back to [B3](b3-package-based-modular.md). Watch for it - "we keep the orgs separate because we always have" is worth challenging every couple of years.
+**Toward consolidation:** if the regions' processes converge, the honest move is to merge orgs and drop back to [B3](b3-modular-trunk.md). Watch for it - "we keep the orgs separate because we always have" is worth challenging every couple of years.
 
 **Signals of trouble:** an org more than two core versions behind, `orgs/<region>/` growing faster than `packages/core/`, or rollouts that routinely stop halfway. Each means the shared core is losing to local divergence.
