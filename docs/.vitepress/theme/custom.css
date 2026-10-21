@@ -160,11 +160,11 @@
 }
 
 /* Below 768px the navbar holds just the title, the search icon and the
- * hamburger - at the default 16px the full name needs about 390px and pushed
- * the hamburger off-screen on narrower phones. There, use the 13px from beside
- * the sidebar, which fits down to 360px; the narrowest phones get the logo
- * alone. Wider screens keep the full-size title. */
-@media (max-width: 399px) {
+ * hamburger - at the default 16px the full name needs 390px, which current
+ * iPhones (390-440px) just have. Narrower phones would push the hamburger
+ * off-screen; there, use the 13px from beside the sidebar, which fits down to
+ * 360px, and the narrowest phones get the logo alone. */
+@media (max-width: 389px) {
   .VPNavBarTitle .title {
     font-size: 13px;
   }
