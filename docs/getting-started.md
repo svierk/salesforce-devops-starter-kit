@@ -24,7 +24,7 @@ Every blueprint documents its migration path to the next one. Start with the sim
 
 Follow [authentication.md](authentication.md) to authenticate your org with the JWT flow and store the credentials as GitHub Actions secrets (`SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME`). This is the only manual setup step.
 
-If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the reusable workflows resolve them per environment, so one caller serves every stage.
+If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the deployment workflow resolves them per environment, so one caller serves every stage. Pull request validation and scratch org CI keep using the repository secrets.
 
 ## 4. Choose a starting point
 

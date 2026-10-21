@@ -65,7 +65,7 @@ This decides whether you need release branches, approval environments, and gates
 
 | Your answers (Q1-Q5)                                  | Blueprint                               |
 | ----------------------------------------------------- | --------------------------------------- |
-| One team · single-org · either · L1 · continuous      | [B1](b1-simple-org-development.md)      |
+| One team · single-org · pro-code · L1 · continuous    | [B1](b1-simple-org-development.md)      |
 | Several · single-org · pro-code · L2-3 · fixed trains | [B2](b2-multi-team-release-branches.md) |
 | Several · single-org · pro-code · L3-4 · continuous   | [B3](b3-package-based-modular.md)       |
 | Several · multi-org · pro-code · L3-4 · mixed         | [B4](b4-multi-org-regional.md)          |

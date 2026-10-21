@@ -137,7 +137,8 @@ jobs:
       delta: true
       severity-threshold: '3'
     secrets:
-      # Environment-scoped secrets resolve per target branch - see below
+      # Repository secrets: pr-validation does not run inside a GitHub
+      # Environment, so every pull request validates against one org
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
       SFDX_USERNAME: ${{ secrets.SFDX_USERNAME }}
@@ -172,6 +173,8 @@ jobs:
 
 ::: tip One secret set per org
 Create four GitHub Environments and store `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` as environment secrets in each. `secrets: inherit` then resolves the right org automatically, and adding a stage never means editing the caller. Add required reviewers to `preprod` and `production` for the approval gate.
+
+Environment secrets only reach the deployments. The PR validation above reads the repository secrets, so store the credentials of the org you validate against there - typically the integration sandbox.
 :::
 
 **Branch protection on all four major branches:**
@@ -189,7 +192,7 @@ Create four GitHub Environments and store `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_
 
 **To [B3](b3-package-based-modular.md)** - the intended destination. Extract the first unlocked package from the happy soup, move its development to scratch orgs, and as packages take over, collapse the promotion chain: `uat` usually goes first, then `preprod`.
 
-**Signals you are ready:** deployment frequency and lead time steady in the high range, change failure rate below roughly one in ten releases, and metadata that has proven separable in practice - not just on a whiteboard.
+**Signals you are ready:** deployment frequency and lead time steady in the high range, change fail rate below roughly one in ten releases, and metadata that has proven separable in practice - not just on a whiteboard.
 
 **Signals you over-built:** a stage where nothing is ever rejected, a UAT sign-off that is a formality, or a promotion chain that takes longer than the development it gates. Remove the stage. Moving back toward [B1](b1-simple-org-development.md) is a legitimate outcome.
 

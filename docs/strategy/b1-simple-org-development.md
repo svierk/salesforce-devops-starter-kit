@@ -144,4 +144,4 @@ jobs:
 
 **To [B3](b3-package-based-modular.md)** directly, skipping B2, if your metadata is already modular and you would rather invest in packaging than in stages. This is the better move if the pressure is "teams block each other" rather than "we need an approval gate".
 
-**Signals to watch:** rising change failure rate, pull requests waiting on each other, or the phrase "let's not merge that yet" becoming routine.
+**Signals to watch:** rising change fail rate, pull requests waiting on each other, or the phrase "let's not merge that yet" becoming routine.

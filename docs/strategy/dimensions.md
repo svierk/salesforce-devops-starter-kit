@@ -81,14 +81,15 @@ These apply to every blueprint, and each one shapes at least one recommendation 
 
 ## Maturity signals
 
-The four DORA metrics are the standard vocabulary for Salesforce DevOps maturity, and the annual [State of Salesforce DevOps](https://gearset.com/state-of-salesforce-devops/) reports track them for this ecosystem specifically:
+The [DORA metrics](https://dora.dev/guides/dora-metrics/) are the standard vocabulary for Salesforce DevOps maturity, and the annual [State of Salesforce DevOps](https://gearset.com/blog/state-of-salesforce-devops-report/) reports track them for this ecosystem specifically:
 
-| Metric                  | Question it answers                      |
-| ----------------------- | ---------------------------------------- |
-| Deployment frequency    | How often do you ship to production?     |
-| Lead time for changes   | How long from commit to production?      |
-| Change failure rate     | What share of releases causes a problem? |
-| Time to restore service | How fast do you recover from one?        |
+| Metric                          | Question it answers                                          |
+| ------------------------------- | ------------------------------------------------------------ |
+| Deployment frequency            | How often do you ship to production?                         |
+| Change lead time                | How long from commit to production?                          |
+| Change fail rate                | What share of deployments causes a problem?                  |
+| Failed deployment recovery time | How fast do you recover from one?                            |
+| Deployment rework rate          | What share of deployments are unplanned fixes for incidents? |
 
 Condensed into the four levels used in [question 4](questions.md#_4-what-is-your-devops-maturity):
 
@@ -101,6 +102,6 @@ Use the metrics as **migration triggers**, not as a scoreboard. Each blueprint p
 
 ## Salesforce DevOps Center
 
-Salesforce's free DevOps Center manages GitHub branches on the admin's behalf: a work item becomes a feature branch, and promotion happens through a UI rather than through Git. That makes it a genuine successor to change sets and a reasonable on-ramp for [B5](b5-low-code-admin-first.md).
+Salesforce's free DevOps Center manages Git branches on the admin's behalf: a work item becomes a feature branch, and promotion happens through a UI rather than through Git. Since 2026 it is a native platform capability, enabled in Setup instead of installed as a managed package, and its pipeline can enforce quality gates - Apex and Flow tests, code coverage and Code Analyzer findings - before a promotion. That makes it a genuine successor to change sets and a reasonable on-ramp for [B5](b5-low-code-admin-first.md).
 
-Its limits matter for the target architecture, though: GitHub and Bitbucket only, no rollback, no scratch org or package development support, no static analysis or test tooling integration, its own work items rather than your issue tracker, and it copes poorly with merges made outside the tool. Treat it as an entry point, not a destination.
+Its limits matter for the target architecture, though: it is built around org-based development rather than scratch orgs and packages, there is no rollback, its work items stand in for your issue tracker rather than connecting to it, and it copes poorly with merges made outside the tool. GitLab and Azure DevOps support and a Jira integration are announced but not yet available. The product is moving quickly - check [what is new in DevOps Center](https://admin.salesforce.com/blog/2026/the-future-of-salesforce-devops-is-here-whats-new-for-admins) before you rule it in or out. Treat it as an entry point, not a destination.

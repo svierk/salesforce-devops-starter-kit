@@ -114,7 +114,7 @@ jobs:
       duration-days: '1'
       test-level: RunLocalTests
       # Dependency packages this one builds on, in install order
-      packages: "['04t...']"
+      packages: '04t...'
     secrets:
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}
@@ -127,9 +127,9 @@ Add [`pr-validation.yml`](/workflows/pr-validation) alongside it with `delta: tr
 
 ```yaml
 - name: Install package version
-  uses: svierk/sfdx-package-installation@v1
+  uses: svierk/sfdx-package-installation@v1.3.0
   with:
-    packages: "['04t...']"
+    packages: '04t...'
     target-org: production
 ```
 

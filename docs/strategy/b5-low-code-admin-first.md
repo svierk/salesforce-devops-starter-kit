@@ -90,7 +90,7 @@ Process carries more weight here than tooling. Three agreements that decide whet
 - **The bus factor is one.** See above. This is the trade-off you are accepting.
 - **Retrieval is the weak link.** If someone forgets, the change exists only in a sandbox. Automate the reminder, or run a scheduled diff against the org.
 - **Flow and profile conflicts still land on the pipeline owner.** Prefer permission sets over profiles from day one - it removes the single worst conflict source.
-- **DevOps Center has real limits:** no rollback, no scratch org or package support, its own work items rather than your issue tracker, and it copes poorly with merges made outside the tool. Treat it as an on-ramp, not the destination.
+- **DevOps Center has real limits:** no rollback, org-based development rather than scratch orgs and packages, its own work items rather than your issue tracker, and it copes poorly with merges made outside the tool. Its quality gates (tests, coverage, Code Analyzer) now cover part of what the kit's validation does - but only for changes that go through DevOps Center. Treat it as an on-ramp, not the destination.
 - **Do not add stages to buy confidence.** Confidence comes from the validation gate and the UAT sign-off, not from a third sandbox.
 
 ## Kit mapping
@@ -121,6 +121,8 @@ jobs:
 ```
 
 Start at `severity-threshold: '2'` and tighten it as the team's Apex share grows.
+
+`secrets: inherit` hands the validation the repository secrets - store the UAT sandbox credentials there. The environment secrets below only reach the deployments.
 
 **Deployment per stage** - [`deployment.yml`](/workflows/deployment) on push to `uat` and `main`, with a GitHub Environment each:
 

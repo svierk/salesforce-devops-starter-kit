@@ -8,7 +8,7 @@ Each blueprint page carries the full, copy-pasteable callers. This page is the o
 
 | Workflow                                                  | [B1](b1-simple-org-development.md) | [B2](b2-multi-team-release-branches.md) | [B3](b3-package-based-modular.md) | [B4](b4-multi-org-regional.md) | [B5](b5-low-code-admin-first.md) |
 | --------------------------------------------------------- | :--------------------------------: | :-------------------------------------: | :-------------------------------: | :----------------------------: | :------------------------------: |
-| [`pr-validation.yml`](/workflows/pr-validation)           |              required              |        required, on all 4 majors        |             required              |    required, per-org matrix    |   required, relaxed threshold    |
+| [`pr-validation.yml`](/workflows/pr-validation)           |              required              |        required, on all 4 majors        |             required              |   required, one job per org    |   required, relaxed threshold    |
 | [`deployment.yml`](/workflows/deployment)                 |             on `main`              |            per major branch             |      residual metadata only       |         per-org matrix         |       on `uat` and `main`        |
 | [`scratch-org-ci.yml`](/workflows/scratch-org-ci)         |              optional              |        optional, on `feature/*`         |         **primary gate**          |            core CI             |                -                 |
 | [`create-scratch-org.yml`](/workflows/create-scratch-org) |              optional              |                optional                 |            recommended            |          recommended           |           recommended            |
@@ -50,22 +50,24 @@ Package **version creation and promotion** (`sf package version create` / `promo
 
 Configure these under **Settings → Branches** for every long-lived branch in your blueprint.
 
-| Rule                           |     B1     |                    B2                     |             B3              |        B4         |         B5         |
-| ------------------------------ | :--------: | :---------------------------------------: | :-------------------------: | :---------------: | :----------------: |
-| Protected branches             |   `main`   |  `integration`, `uat`, `preprod`, `main`  |           `main`            |      `main`       |   `uat`, `main`    |
-| Default branch                 |   `main`   |               `integration`               |           `main`            |      `main`       |       `uat`        |
-| Require a pull request         |    yes     |                    yes                    |             yes             |        yes        |        yes         |
-| Required approvals             |     1      |                     1                     |       1 (owning team)       |  1 (CODEOWNERS)   | 1 (pipeline owner) |
-| Required status checks         | validation |                validation                 | validation + scratch org CI | validation matrix |     validation     |
-| Require up-to-date branches    |    yes     |                    yes                    |             yes             |        yes        |        yes         |
-| Restrict who can merge         |     -      | release manager on `uat`/`preprod`/`main` |              -              |    CODEOWNERS     |   pipeline owner   |
-| Block force pushes & deletions |    yes     |                    yes                    |             yes             |        yes        |        yes         |
+| Rule                           |     B1     |                    B2                     |             B3              |         B4         |         B5         |
+| ------------------------------ | :--------: | :---------------------------------------: | :-------------------------: | :----------------: | :----------------: |
+| Protected branches             |   `main`   |  `integration`, `uat`, `preprod`, `main`  |           `main`            |       `main`       |   `uat`, `main`    |
+| Default branch                 |   `main`   |               `integration`               |           `main`            |       `main`       |       `uat`        |
+| Require a pull request         |    yes     |                    yes                    |             yes             |        yes         |        yes         |
+| Required approvals             |     1      |                     1                     |       1 (owning team)       |   1 (CODEOWNERS)   | 1 (pipeline owner) |
+| Required status checks         | validation |                validation                 | validation + scratch org CI | validation per org |     validation     |
+| Require up-to-date branches    |    yes     |                    yes                    |             yes             |        yes         |        yes         |
+| Restrict who can merge         |     -      | release manager on `uat`/`preprod`/`main` |              -              |     CODEOWNERS     |   pipeline owner   |
+| Block force pushes & deletions |    yes     |                    yes                    |             yes             |        yes         |        yes         |
 
 ## GitHub Environments
 
 [`deployment.yml`](/workflows/deployment) takes an `environment` input, and that one input carries two things at once: **environment-scoped secrets** (so each org has its own credentials, and no job ever sees another org's) and **protection rules** (required reviewers, wait timers, branch restrictions).
 
 This is what lets one reusable workflow serve every stage and every org. Create one environment per target org, store `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` in each, and use `secrets: inherit` in the caller.
+
+Only `deployment.yml` runs inside an environment. [`pr-validation.yml`](/workflows/pr-validation) and [`scratch-org-ci.yml`](/workflows/scratch-org-ci) read the **repository secrets**, so keep one set there as well - your validation org, or the Dev Hub for scratch orgs.
 
 | Blueprint | Environments to create                                                           |
 | --------- | -------------------------------------------------------------------------------- |

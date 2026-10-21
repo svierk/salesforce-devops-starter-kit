@@ -140,7 +140,8 @@ jobs:
       # Roll out one org at a time so a failure can be caught before it spreads.
       max-parallel: 1
       matrix:
-        region: [eu, na, apac]
+        # "all" fans out to every org; a single region rolls out on its own
+        region: ${{ fromJSON(inputs.region == 'all' && '["eu","na","apac"]' || format('["{0}"]', inputs.region)) }}
     uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.1.0
     with:
       source-dir: orgs/${{ matrix.region }}
@@ -154,7 +155,7 @@ jobs:
 Store each org's `SFDX_CONSUMER_KEY`, `SFDX_JWT_SECRET_KEY` and `SFDX_USERNAME` as environment secrets and add that region's release manager as a required reviewer. `secrets: inherit` then resolves the right org per matrix leg, and no credential is ever visible to another region's job.
 :::
 
-**Validate against every affected org.** A core change touches all of them, so run [`pr-validation.yml`](/workflows/pr-validation) as a matrix too - a check-only delta deployment into each org's sandbox catches the region whose local configuration conflicts with the core change, which is the failure this blueprint exists to survive.
+**Validate against every affected org.** A core change touches all of them, and a check-only delta deployment into each org's sandbox catches the region whose local configuration conflicts with the core change - the failure this blueprint exists to survive. [`pr-validation.yml`](/workflows/pr-validation) does not run inside a GitHub Environment, so it cannot pick up per-org environment secrets: add one validation job per region and pass that region's sandbox credentials explicitly through its `secrets:` block.
 
 **Distribute the core with** [`sfdx-package-installation`](https://github.com/svierk/sfdx-package-installation), pinning an explicit version per org rather than "latest". The pin is what makes independent adoption real.
 

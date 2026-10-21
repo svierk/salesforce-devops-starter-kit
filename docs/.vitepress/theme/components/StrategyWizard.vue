@@ -152,7 +152,7 @@ const BLUEPRINTS = {
     branches: 'Trunk plus short-lived `release/<org>` branches',
     switchOn: [
       '`deployment.yml` in a matrix, one GitHub Environment per production org',
-      '`pr-validation.yml` as a matrix too - a core change touches every org',
+      '`pr-validation.yml` once per region - a core change touches every org',
       '`sfdx-package-installation` with an explicit version pin per org',
       'CODEOWNERS mapping the core and each org overlay to its team'
     ]
