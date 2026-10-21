@@ -1,8 +1,9 @@
 name: Validation
 
-# Validates changes to this repository: checks formatting with Prettier and
-# builds the VitePress documentation site (which also runs the docs generator,
-# so a broken generator or malformed workflow YAML fails here before merge).
+# Validates changes to this repository: checks formatting with Prettier, tests
+# the strategy questionnaire's routing against its documentation, and builds the
+# VitePress documentation site (which also runs the docs generator, so a broken
+# generator or malformed workflow YAML fails here before merge).
 
 on:
   push:
@@ -39,6 +40,9 @@ jobs:
 
       - name: Check Formatting
         run: npm run prettier:verify
+
+      - name: Run Tests
+        run: npm test
 
       - name: Build Docs
         run: npm run docs:build

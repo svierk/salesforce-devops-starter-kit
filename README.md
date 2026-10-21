@@ -5,11 +5,13 @@
 
 <img src="./images/salesforce-devops-starter-kit.png" alt="Salesforce DevOps Starter Kit - composable CI/CD with GitHub Actions" width="900"/>
 
-An open source starter kit for the Trailblazer Community that makes it easy to build flexible CI/CD pipelines for Salesforce projects with **GitHub Actions**.
+An open source starter kit for the Trailblazer Community that makes it easy to build flexible CI/CD pipelines for Salesforce projects with **GitHub Actions** - and to choose the org and branching strategy they run on.
 
 The kit is built around a set of small, focused [GitHub Actions](#-building-blocks) that abstract away the complexity of the Salesforce CLI. Think of them as **building blocks**: each one does one job well, and you compose them into exactly the pipeline your project needs. On top of the building blocks, this repository provides ready-to-use [reusable workflows](#-reusable-workflows) and [copy-paste examples](#-examples) so you can get from zero to a working pipeline in minutes.
 
-The full **[documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** is an auto-generated catalog of every building block and reusable workflow - each with its complete input/secret reference and copy-paste examples.
+Which pipeline you need depends on a decision that comes first and is expensive to reverse: how many orgs and sandboxes you run, and which branching model connects them. The **[strategy guide](https://svierk.github.io/salesforce-devops-starter-kit/strategy/)** asks a handful of questions about your team, org landscape and release style and points you to one of five **blueprints** - each mapped to the exact workflows, GitHub Environments and branch protection rules of this kit to switch on.
+
+The full **[documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** brings both together: the strategy guide, and an auto-generated catalog of every building block and reusable workflow - each with its complete input/secret reference and copy-paste examples.
 
 <a href="https://svierk.github.io/salesforce-devops-starter-kit/"><img src="https://img.shields.io/badge/Actions_Catalog-Explore_the_docs-1d4ed8?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Explore the documentation" /></a>
 
@@ -182,9 +184,10 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 
 ## 📚 Documentation
 
-- 🌐 **[Documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** - the full building-block and workflow catalog, generated from this repository
+- 🌐 **[Documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** - the strategy guide and the full building-block and workflow catalog, generated from this repository
 - [docs/getting-started.md](docs/getting-started.md) - set up your first pipeline end to end
 - [docs/authentication.md](docs/authentication.md) - configure SFDX Auth URL and JWT authentication
+- [docs/strategy/](docs/strategy/index.md) - choose your org and branching strategy: the five blueprints and how to set up each one
 
 ## 🔐 Security & versioning
 

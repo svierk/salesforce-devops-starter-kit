@@ -159,6 +159,23 @@
   }
 }
 
+/* Below 768px the navbar holds just the title, the search icon and the
+ * hamburger - at the default 16px the full name needs about 390px and pushed
+ * the hamburger off-screen on narrower phones. There, use the 13px from beside
+ * the sidebar, which fits down to 360px; the narrowest phones get the logo
+ * alone. Wider screens keep the full-size title. */
+@media (max-width: 399px) {
+  .VPNavBarTitle .title {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 359px) {
+  .VPNavBarTitle .title > span {
+    display: none;
+  }
+}
+
 /* Feature-card icons are emoji - give them a little more presence. */
 .VPFeature .icon {
   font-size: 24px;
@@ -174,10 +191,18 @@
   overflow: hidden;
 }
 
-/* Tables (workflow inputs/secrets) read better full-width and compact. */
+/* Tables (workflow inputs/secrets) read better full-width and compact. Wider
+ * tables scroll inside .table-scroll (added by the markdown hook in config.mts)
+ * instead of widening the page. */
+.vp-doc .table-scroll {
+  margin: 20px 0;
+  overflow-x: auto;
+}
+
 .vp-doc table {
   display: table;
   width: 100%;
+  margin: 0;
 }
 
 .vp-doc th,

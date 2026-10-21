@@ -34,6 +34,14 @@ export default defineConfig({
     ['meta', { property: 'og:image:height', content: '640' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }]
   ],
+  // mermaid's own chunks (core, cytoscape, ...) are up to ~700 kB each, but they
+  // are only fetched by pages that render a diagram (see theme/mermaid.ts). Raise
+  // the warning limit above them so it still flags growth in the shared bundle.
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 800
+    }
+  },
   // Belt-and-suspenders: the markdown hook below turns repo-relative links into
   // absolute GitHub URLs, but keep the check lenient for anything that slips by.
   ignoreDeadLinks: [/\.\.\//],
@@ -57,6 +65,26 @@ export default defineConfig({
         return defaultCodeInline(tokens, idx, options, env, self);
       };
 
+      // ```mermaid fences - the strategy decision tree and the per-blueprint
+      // branch/org diagrams - become <MermaidDiagram>, which loads mermaid only
+      // when a page with a diagram mounts. GitHub renders the same fences from
+      // the Markdown source. URI-encoding keeps the source intact as a prop.
+      const defaultFence = md.renderer.rules.fence!;
+      md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+        const token = tokens[idx];
+        if (token.info.trim() === 'mermaid') {
+          return `<MermaidDiagram code="${encodeURIComponent(token.content)}" />`;
+        }
+        return defaultFence(tokens, idx, options, env, self);
+      };
+
+      // custom.css stretches tables to the content width (display: table), which
+      // drops the default theme's horizontal scrolling - on a phone a wide table
+      // (workflow inputs, the blueprint matrices) widened the whole page. Give
+      // every table its own scroll container; tabindex keeps it keyboard-scrollable.
+      md.renderer.rules.table_open = () => '<div class="table-scroll" tabindex="0"><table>\n';
+      md.renderer.rules.table_close = () => '</table>\n</div>\n';
+
       const repoBlob = 'https://github.com/svierk/salesforce-devops-starter-kit/blob/main/';
       const defaultRender =
         md.renderer.rules.link_open ||
@@ -76,7 +104,10 @@ export default defineConfig({
   },
   themeConfig: {
     logo: '/images/salesforce-devops-starter-kit-hero-logo.png',
-    nav: [{ text: 'Home', link: '/' }, ...nav, { text: 'GitHub', link: 'https://github.com/svierk/salesforce-devops-starter-kit' }],
+    // No "Home" or "GitHub" entries: the logo already links home and the GitHub
+    // icon below covers the repository. Every nav entry costs width the navbar
+    // does not have between 768px and ~1060px, beside the search and sidebar.
+    nav,
     sidebar,
     search: {
       provider: 'local'

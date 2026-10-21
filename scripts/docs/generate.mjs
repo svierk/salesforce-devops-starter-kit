@@ -263,6 +263,24 @@ async function writeBlockPages() {
   return meta;
 }
 
+/**
+ * The strategy pages are hand-written, so nothing regenerates them if one is
+ * renamed - the sidebar would just point at a page that no longer exists.
+ * VitePress only reports dead links found in Markdown, not in the sidebar, so
+ * check them here instead of shipping a broken menu entry.
+ */
+function assertStrategyPages() {
+  const missing = config.strategy
+    .map((page) => page.slug)
+    .filter((slug) => !existsSync(join(docsDir, 'strategy', `${slug}.md`)));
+  if (missing.length) {
+    throw new Error(
+      `scripts/docs/site.config.json lists strategy page(s) that do not exist: ${missing.join(', ')}. ` +
+        'Add the file under docs/strategy/ or remove the entry from the config.'
+    );
+  }
+}
+
 /** Assemble the VitePress sidebar (shown across the whole site). */
 function buildSidebar(workflowMeta, blockMeta) {
   const sidebar = [
@@ -272,6 +290,17 @@ function buildSidebar(workflowMeta, blockMeta) {
       items: [
         { text: 'Getting Started', link: '/getting-started' },
         { text: 'Authentication', link: '/authentication' }
+      ]
+    },
+    // Hand-written, unlike the two catalogs below - the strategy layer is
+    // editorial content, so it is listed from site.config.json rather than
+    // derived from the repository.
+    {
+      text: 'Strategy & Blueprints',
+      collapsed: false,
+      items: [
+        { text: 'Find your blueprint', link: '/strategy/' },
+        ...config.strategy.map((page) => ({ text: page.text, link: `/strategy/${page.slug}` }))
       ]
     },
     {
@@ -297,6 +326,7 @@ function writeGenerated(sidebar, workflowMeta, blockMeta) {
   const firstBlock = config.blockCategories[0].blocks[0].repo;
   const nav = [
     { text: 'Guide', link: '/getting-started' },
+    { text: 'Strategy', link: '/strategy/' },
     { text: 'Workflows', link: `/workflows/${workflowMeta[0].slug}` },
     { text: 'Building Blocks', link: `/blocks/${firstBlock}` }
   ];
@@ -343,6 +373,7 @@ function toYaml(value, indent = 0) {
 async function main() {
   clean();
   copyAssets();
+  assertStrategyPages();
   const workflowMeta = writeWorkflowPages();
   const blockMeta = await writeBlockPages();
   const sidebar = buildSidebar(workflowMeta, blockMeta);
