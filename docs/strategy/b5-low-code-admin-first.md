@@ -55,10 +55,10 @@ Three environments is the ceiling here, not a starting point. Every additional s
 
 Two long-lived branches, `uat` and `main`, each bound to an org. Work-item branches are created **by tooling**, not by hand:
 
-- Salesforce **DevOps Center** creates a branch per work item and promotes through a UI. This is the on-ramp it was built for.
-- Or a `workflow_dispatch` workflow in this repository that retrieves named metadata from the dev sandbox and opens the pull request - a "retrieve my change" button in the Actions tab.
+- Salesforce **DevOps Center** lists the changes in the dev sandbox; the admin ticks the ones that belong to a work item, and DevOps Center creates the branch and promotes through a UI. This is the on-ramp it was built for, and the default here.
+- For a route that stays closer to Git, [sfdx-hardis](https://sfdx-hardis.cloudity.com/salesforce-ci-cd-publish-task/) guides the same steps from VS Code: it lists the changes, commits the selected ones and opens the pull request.
 
-Either way, the admin's interface is a form, not a command line.
+Either way, the admin picks changes from a list - nobody types metadata names or runs a command line. Both rely on source tracking, so the dev sandbox has to be a Developer or Developer Pro sandbox with source tracking enabled. A form in the Actions tab cannot do this job: it cannot list what changed in an org, so the admin would have to name every component by hand.
 
 ::: warning Two stages, deliberately
 This is an environment-branch model, which [Background](background.md#branching-models) warns about - and the warning holds. It is defensible here only because there are **two** stages, not four, and because tooling performs the promotions. If you find yourself adding a third org-bound branch, the model has outgrown its justification: move to [B1](b1-simple-org-development.md) if the team has learned Git, or to [B2](b2-multi-team-environment-branches.md) if you genuinely need the gates.
@@ -132,7 +132,7 @@ Start at `severity-threshold: '2'` and tighten it as the team's Apex share grows
 DevOps Center deploys when it promotes a work item, and it merges into `uat` and `main` as it does so. If DevOps Center is your promotion tool, do **not** add the deployment caller below as well - every promotion would deploy twice, the second time outside DevOps Center's view. Let DevOps Center own deployment, keep the kit for validation and self-service orgs, and check that your branch protection rules still allow DevOps Center's merges.
 :::
 
-**Deployment per stage** - only on the kit route, where a workflow in this repository opens the work-item pull requests: [`deployment.yml`](/workflows/deployment) on push to `uat` and `main`, with a GitHub Environment each:
+**Deployment per stage** - only on the Git route, where the work-item pull requests come from VS Code tooling such as sfdx-hardis: [`deployment.yml`](/workflows/deployment) on push to `uat` and `main`, with a GitHub Environment each:
 
 ```yaml
 name: Deployment
