@@ -1,3 +1,7 @@
+---
+description: "Five questions about orgs, teams, team setup, maturity and release style route a Salesforce team to one of five DevOps blueprints."
+---
+
 # Find your blueprint
 
 Answer a handful of questions about your org landscape, your team and how you release. You get one of five blueprints - a concrete target picture with the workflows, environments and branch protection rules of this kit to switch on. The **?** next to each question explains why it matters.

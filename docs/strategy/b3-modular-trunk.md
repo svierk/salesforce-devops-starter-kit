@@ -1,3 +1,7 @@
+---
+description: "Several mature teams on one trunk - feature flags, source modules or unlocked packages, and a validation gate plus scratch org CI that genuinely block."
+---
+
 # B3 - Modular Trunk
 
 Several teams on one trunk: `main` is always releasable, work merges daily behind feature flags, and the metadata is cut into modules with explicit dependencies. Fewest long-lived branches of any blueprint here - and the highest bar to entry, set by discipline rather than tooling.

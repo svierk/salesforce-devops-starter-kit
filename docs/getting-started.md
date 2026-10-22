@@ -1,3 +1,7 @@
+---
+description: "Set up a first Salesforce CI/CD pipeline with the kit - from choosing a strategy and configuring JWT authentication to pull request validation and deployment."
+---
+
 # Getting Started
 
 This guide takes you from an empty repository to a working Salesforce CI/CD pipeline using the building blocks of this kit.

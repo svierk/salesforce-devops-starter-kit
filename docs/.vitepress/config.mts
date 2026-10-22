@@ -1,5 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig } from 'vitepress';
+import llmstxt from 'vitepress-plugin-llms';
+import { absolutizeFile } from '../../scripts/docs/llms-links.mjs';
 
 // The sidebar and nav are generated from the repository content by
 // scripts/docs/generate.mjs, which runs before every dev/build (see the
@@ -9,13 +12,15 @@ const { sidebar, nav } = JSON.parse(readFileSync(new URL('./generated.json', imp
 const title = 'Salesforce DevOps Starter Kit';
 const description = 'GitHub-native CI/CD building blocks and reusable workflows for Salesforce projects.';
 const siteUrl = 'https://svierk.github.io/salesforce-devops-starter-kit/';
+const base = '/salesforce-devops-starter-kit/';
+const repoBlob = 'https://github.com/svierk/salesforce-devops-starter-kit/blob/main/';
 const favicon = '/salesforce-devops-starter-kit/images/salesforce-devops-starter-kit-hero-logo.png';
 
 export default defineConfig({
   title,
   description,
   lang: 'en-US',
-  base: '/salesforce-devops-starter-kit/',
+  base,
   cleanUrls: true,
   lastUpdated: true,
   // Favicon - head link hrefs are not base-adjusted, so include the base prefix.
@@ -38,6 +43,12 @@ export default defineConfig({
   // are only fetched by pages that render a diagram (see theme/mermaid.ts). Raise
   // the warning limit above them so it still flags growth in the shared bundle.
   vite: {
+    // AI-friendly docs: llms.txt (an index of the site), llms-full.txt (every
+    // page in one file) and a Markdown copy of each page next to its HTML, for
+    // agents that read the docs while they work. Its `domain` option is left
+    // out on purpose: it also rewrites links inside the pages, and mangles them
+    // under a base path - buildEnd below makes them absolute instead.
+    plugins: [llmstxt()],
     build: {
       chunkSizeWarningLimit: 800
     }
@@ -58,8 +69,7 @@ export default defineConfig({
       // fetched verbatim from the Action repositories, where such prose appears
       // and changes without a commit here, so mark every code span v-pre.
       const defaultCodeInline =
-        md.renderer.rules.code_inline ||
-        ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+        md.renderer.rules.code_inline || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
       md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
         tokens[idx].attrSet('v-pre', '');
         return defaultCodeInline(tokens, idx, options, env, self);
@@ -85,10 +95,8 @@ export default defineConfig({
       md.renderer.rules.table_open = () => '<div class="table-scroll" tabindex="0"><table>\n';
       md.renderer.rules.table_close = () => '</table>\n</div>\n';
 
-      const repoBlob = 'https://github.com/svierk/salesforce-devops-starter-kit/blob/main/';
       const defaultRender =
-        md.renderer.rules.link_open ||
-        ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+        md.renderer.rules.link_open || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
       md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
         const token = tokens[idx];
         const hrefIndex = token.attrIndex('href');
@@ -101,6 +109,19 @@ export default defineConfig({
         return defaultRender(tokens, idx, options, env, self);
       };
     }
+  },
+  // The Markdown copies are read on their own, so their relative and
+  // root-relative links would resolve against nothing - see
+  // scripts/docs/llms-links.mjs. llms.txt itself only links pages, by path.
+  buildEnd({ outDir, srcDir }) {
+    const isFile = (path) => existsSync(join(srcDir, path));
+    for (const file of readdirSync(outDir, { recursive: true })) {
+      if (!/\.md$|^llms-full\.txt$/.test(file)) continue;
+      const path = join(outDir, file);
+      writeFileSync(path, absolutizeFile(readFileSync(path, 'utf-8'), { base, isFile, siteUrl, repoBlob }));
+    }
+    const index = join(outDir, 'llms.txt');
+    writeFileSync(index, readFileSync(index, 'utf-8').replaceAll(`](${base}`, `](${siteUrl}`));
   },
   themeConfig: {
     logo: '/images/salesforce-devops-starter-kit-hero-logo.png',
@@ -118,7 +139,7 @@ export default defineConfig({
       text: 'Edit this page on GitHub'
     },
     footer: {
-      message: 'Released under the MIT License.',
+      message: `Released under the MIT License. · <a href="${base}llms.txt">llms.txt</a> for AI agents`,
       copyright: 'Copyright © Sebastiano Schwarz'
     }
   }

@@ -186,6 +186,8 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 ## 📚 Documentation
 
 - 🌐 **[Documentation site](https://svierk.github.io/salesforce-devops-starter-kit/)** - the strategy guide and the full building-block and workflow catalog, generated from this repository
+- 🤖 **AI-friendly docs** - for agents that read the docs while they work: [llms.txt](https://svierk.github.io/salesforce-devops-starter-kit/llms.txt) as an index, [llms-full.txt](https://svierk.github.io/salesforce-devops-starter-kit/llms-full.txt) with every page in one file, and a Markdown copy of each page next to its HTML (append `.md` to the page URL)
+- 🧠 **Agent skills** - [svierk/salesforce-skills](https://github.com/svierk/salesforce-skills) packages the know-how of this kit for AI coding agents: from choosing a blueprint and setting up or auditing a pipeline to everyday Git and GitHub work on a Salesforce project
 - [docs/getting-started.md](docs/getting-started.md) - set up your first pipeline end to end
 - [docs/authentication.md](docs/authentication.md) - configure SFDX Auth URL and JWT authentication
 - [docs/strategy/](docs/strategy/index.md) - choose your org and branching strategy: the five blueprints and how to set up each one

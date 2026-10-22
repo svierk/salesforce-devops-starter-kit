@@ -1,3 +1,7 @@
+---
+description: "Which reusable workflows, input settings, branch protection rules and GitHub Environments each of the five blueprints switches on."
+---
+
 # Kit Mapping
 
 The bridge between the strategy layer and the pipeline. Once you have picked a blueprint, this page tells you which parts of the kit to switch on - and what to configure in GitHub around them.

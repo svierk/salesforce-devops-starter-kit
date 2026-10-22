@@ -1,3 +1,7 @@
+---
+description: "Authenticate CI/CD pipelines to Salesforce orgs with the JWT bearer flow or an SFDX Auth URL, and store the credentials as GitHub Actions secrets."
+---
+
 # Authentication
 
 CI/CD pipelines need a non-interactive way to authenticate to your Salesforce orgs. The [sfdx-login](https://github.com/svierk/sfdx-login) building block supports two options. Pick **one** per org and store the resulting credential as a GitHub Actions secret.

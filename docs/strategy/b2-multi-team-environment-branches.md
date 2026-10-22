@@ -1,3 +1,7 @@
+---
+description: "Several teams sharing one production org - environment branches with story promotion, release bundles or a release train, and approval gates per stage."
+---
+
 # B2 - Multi-Team with Environment Branches
 
 Several streams, one long-lived Git branch per org, and an explicit release decision. The classic enterprise Salesforce setup - and the one that costs the most to operate, so adopt it only for the stages your approval process actually requires.
