@@ -25,6 +25,7 @@
     "mermaid": "^12.2.0",
     "prettier": "^3.9.9",
     "vitepress": "^1.6.4",
+    "vitepress-plugin-llms": "^1.14.0",
     "yaml": "^2.9.1"
   }
 }

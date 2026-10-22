@@ -1,3 +1,7 @@
+---
+description: "The reasoning behind the blueprints - sandbox types and licences, single- vs. multi-org, org vs. package development, branching models, release styles and maturity levels."
+---
+
 # Background & Trade-Offs
 
 The reasoning behind the [questionnaire](index.md) and the blueprints. Read this if you want to argue with a blueprint rather than adopt it.

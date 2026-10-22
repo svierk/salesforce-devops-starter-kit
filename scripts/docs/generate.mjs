@@ -114,6 +114,21 @@ function outputRows(outputs = {}) {
   return Object.entries(outputs).map(([name, spec]) => [`\`${name}\``, cell(spec.description)]);
 }
 
+/** The first sentence of a description, up to a colon that starts the details. */
+function firstSentence(text) {
+  const sentence = text.match(/^.*?[.:](?=\s|$)/)?.[0] ?? text;
+  return sentence.replace(/:$/, '.');
+}
+
+/**
+ * Front matter carrying the page's description - VitePress turns it into the
+ * meta description, and vitepress-plugin-llms into the summary next to the
+ * page in llms.txt.
+ */
+function frontmatter(description) {
+  return description ? `---\n${toYaml({ description })}---\n\n` : '';
+}
+
 /** Build one page per reusable workflow and return sidebar metadata. */
 function writeWorkflowPages() {
   const meta = [];
@@ -124,7 +139,7 @@ function writeWorkflowPages() {
     const title = doc.name ?? wf.slug;
     const description = extractHeaderComment(raw);
 
-    let page = `# ${title}\n\n`;
+    let page = `${frontmatter(firstSentence(description))}# ${title}\n\n`;
     if (description) page += `${description}\n\n`;
     page += `> Reusable workflow - call it from your own repository with \`uses:\`. `;
     page += `[View source](${BLOB(config.repo, `.github/workflows/${wf.file}`)})\n\n`;
@@ -257,7 +272,7 @@ async function writeBlockPages() {
       const { title, description } = summarize(markdown, repo);
       const body = rewriteReadme(markdown, repo).trimEnd();
       const footer = `\n\n---\n\n➡️ **Full source & releases:** [${config.owner}/${repo}](https://github.com/${config.owner}/${repo})\n`;
-      writeFileSync(join(blocksOutDir, `${repo}.md`), `${body}${footer}`);
+      writeFileSync(join(blocksOutDir, `${repo}.md`), `${frontmatter(block.tagline ?? description)}${body}${footer}`);
       // Card teaser: prefer the curated tagline (uniform length, benefit-focused);
       // fall back to a truncated README first paragraph if none is configured.
       const cardText = block.tagline ?? truncate(description, 130);

@@ -1,3 +1,7 @@
+---
+description: "One team on one production org - GitHub Flow with short-lived feature branches, PR validation and a gated production deployment."
+---
+
 # B1 - Simple Org Development
 
 The default starting point. One team, one production org, one branch that is always deployable.

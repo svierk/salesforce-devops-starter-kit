@@ -1,3 +1,7 @@
+---
+description: "Several production orgs by region or business unit - a shared core as pinned package versions, or one environment chain per org."
+---
+
 # B4 - Multi-Org / Regional Rollout
 
 Several production orgs - by region, business unit or brand - with a shared core that is maintained once while local differences stay local.

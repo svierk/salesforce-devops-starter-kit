@@ -1,3 +1,7 @@
+---
+description: "Admin-heavy teams where Git knowledge is the bottleneck - two org-bound branches, tool-driven promotion and a validation gate tuned to declarative work."
+---
+
 # B5 - Low-Code First
 
 Most changes are built by clicking, by people who do not use Git. The strategy's job here is to make version control real without making it the admins' problem.
