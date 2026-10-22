@@ -103,7 +103,7 @@ jobs:
       - name: Code Review
         if: ${{ inputs.run-code-review }}
         continue-on-error: true
-        uses: svierk/sfdx-code-review@v1.1.0
+        uses: svierk/sfdx-code-review@v1.1.1
         with:
           code-analyzer: true
           workspace: ${{ inputs.source-dir }}

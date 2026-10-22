@@ -103,7 +103,7 @@ jobs:
           alias: ci
 
       - name: Code Review
-        uses: svierk/sfdx-code-review@v1.1.0
+        uses: svierk/sfdx-code-review@v1.1.1
         with:
           workspace: force-app
           severity-threshold: 3
