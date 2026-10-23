@@ -162,7 +162,7 @@ jobs:
       matrix:
         # "all" fans out to every org; a single region rolls out on its own
         region: ${{ fromJSON(inputs.region == 'all' && '["eu","na","apac"]' || format('["{0}"]', inputs.region)) }}
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.3.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.5.0
     with:
       source-dir: orgs/${{ matrix.region }}
       target-org-alias: ${{ matrix.region }}-production
