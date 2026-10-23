@@ -87,9 +87,11 @@ jobs:
       # Both version overrides below read repository variables of the calling
       # repository. Leave them unset for the defaults (engines.node from
       # package.json / latest SF CLI); populate them to pin a version without
-      # touching any workflow file.
+      # touching any workflow file. The dependency cache follows the package
+      # manager of the calling repository (npm, yarn or pnpm, detected from
+      # package.json or the lock file) and is skipped without a lock file.
       - name: Select Node Version
-        uses: svierk/get-node-version@v1.5.2
+        uses: svierk/get-node-version@v1.6.0
         with:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
 
