@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   create-scratch-org:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@v1.3.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/create-scratch-org.yml@v1.5.0
     with:
       org-name: ${{ inputs.org-name }}
       description: ${{ inputs.description }}
