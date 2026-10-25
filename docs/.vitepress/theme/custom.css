@@ -209,3 +209,8 @@
 .vp-doc td {
   padding: 8px 12px;
 }
+
+/* The page behind an enlarged diagram (MermaidDiagram.vue) stays put. */
+html.mermaid-dialog-open {
+  overflow: hidden;
+}
