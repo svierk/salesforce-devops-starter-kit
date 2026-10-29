@@ -109,7 +109,7 @@ jobs:
           severity-threshold: 3
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@v1.3.0
+        uses: svierk/sfdx-deploy@v1.3.1
         with:
           delta: true
           delta-from: origin/${{ github.base_ref }}

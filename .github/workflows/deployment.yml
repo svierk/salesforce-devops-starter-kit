@@ -106,7 +106,7 @@ jobs:
           alias: ${{ inputs.target-org-alias }}
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@v1.3.0
+        uses: svierk/sfdx-deploy@v1.3.1
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           delta: ${{ inputs.delta }}
