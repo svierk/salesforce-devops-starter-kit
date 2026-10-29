@@ -175,7 +175,7 @@ jobs:
 
       - name: Deploy Metadata
         if: ${{ inputs.deploy-metadata }}
-        uses: svierk/sfdx-deploy@v1.3.0
+        uses: svierk/sfdx-deploy@v1.3.1
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ steps.scratch.outputs.username }}

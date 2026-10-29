@@ -139,7 +139,7 @@ jobs:
           alias: ci
 
       - name: Validate Deployment
-        uses: svierk/sfdx-deploy@v1.3.0
+        uses: svierk/sfdx-deploy@v1.3.1
         with:
           source-dir: force-app
           target-org: ci
@@ -194,7 +194,7 @@ The [examples](examples) folder contains complete, copy-paste-ready caller workf
 
 ## 🔐 Security & versioning
 
-Every `uses:` reference in this repository - in the [reusable workflows](.github/workflows), in the [examples](examples) and in the snippets above - is **pinned to an exact release version**, e.g. `svierk/sfdx-deploy@v1.3.0`. Do the same in your own pipelines:
+Every `uses:` reference in this repository - in the [reusable workflows](.github/workflows), in the [examples](examples) and in the snippets above - is **pinned to an exact release version**, e.g. `svierk/sfdx-deploy@v1.3.1`. Do the same in your own pipelines:
 
 - **Never reference a mutable ref** such as `@main` or `@v1`. It runs whatever code sits on that branch/tag at run time - with access to your org credentials - so a compromised or rewritten ref would run unnoticed.
 - **Good - pin to an exact release tag** (`@v1.3.0`). Readable, concrete, and bumped through reviewed pull requests. This is what the kit itself uses.

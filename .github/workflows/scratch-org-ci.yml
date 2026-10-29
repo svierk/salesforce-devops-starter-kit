@@ -129,7 +129,7 @@ jobs:
           publish-wait: 20
 
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@v1.3.0
+        uses: svierk/sfdx-deploy@v1.3.1
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ steps.scratch.outputs.username }}
