@@ -45,6 +45,9 @@ jobs:
       admin-email: ${{ inputs.admin-email }}
       duration-days: ${{ inputs.duration-days }}
       source-dir: force-app
+      # Build what the deploy needs but Git does not hold, e.g. the UI bundles
+      # of a Multi-Framework project - an npm script in your root package.json:
+      # build-script: build:ui-bundles
       deploy-metadata: true
       install-packages: ${{ inputs.install-packages }}
       # Dependency packages to install when "Install dependency packages?" is checked:

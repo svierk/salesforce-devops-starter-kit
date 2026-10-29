@@ -20,6 +20,9 @@ jobs:
     uses: svierk/salesforce-devops-starter-kit/.github/workflows/scratch-org-ci.yml@v1.5.0
     with:
       source-dir: force-app
+      # Build what the deploy needs but Git does not hold, e.g. the UI bundles
+      # of a Multi-Framework project - an npm script in your root package.json:
+      # build-script: build:ui-bundles
       definition-file: config/project-scratch-def.json
       duration-days: '1'
       test-level: RunLocalTests

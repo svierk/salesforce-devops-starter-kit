@@ -23,6 +23,9 @@ jobs:
     uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.5.0
     with:
       source-dir: force-app
+      # Build what the deploy needs but Git does not hold, e.g. the UI bundles
+      # of a Multi-Framework project - an npm script in your root package.json:
+      # build-script: build:ui-bundles
       test-level: RunLocalTests
       # Run only a selection of Apex test classes instead (implies RunSpecifiedTests):
       # apex-tests: AccountServiceTest,LeadServiceTest
