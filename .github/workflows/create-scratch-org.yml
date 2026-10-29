@@ -38,6 +38,11 @@ on:
         required: false
         type: string
         default: force-app
+      build-script:
+        description: Optional npm script to run from the repository root before the deployment, e.g. "build:ui-bundles" to build the UI bundles of a Multi-Framework project. It runs with the package manager of the repository and with SF_TARGET_ORG set to the scratch org. Skipped when deploy-metadata is false. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
       definition-file:
         description: Path to the scratch org definition file.
         required: false
@@ -132,6 +137,7 @@ jobs:
       # manager of the calling repository (npm, yarn or pnpm, detected from
       # package.json or the lock file) and is skipped without a lock file.
       - name: Select Node Version
+        id: node
         uses: svierk/get-node-version@v1.6.0
         with:
           node-version: ${{ vars.NODE_VERSION_OVERRIDE }}
@@ -172,6 +178,18 @@ jobs:
           target-org: ${{ steps.scratch.outputs.username }}
           wait: 30
           publish-wait: 20
+
+      # Runs once the scratch org exists: the UI bundle plugins bake the API
+      # version of the org in SF_TARGET_ORG into the build - without it they
+      # read the CLI's default org, or fall back to v50.0. The script name is
+      # passed through env, never interpolated into the shell.
+      - name: Build
+        if: ${{ inputs.deploy-metadata && inputs.build-script != '' }}
+        env:
+          BUILD_SCRIPT: ${{ inputs.build-script }}
+          PACKAGE_MANAGER: ${{ steps.node.outputs.package-manager }}
+          SF_TARGET_ORG: ${{ steps.scratch.outputs.username }}
+        run: '"$PACKAGE_MANAGER" run "$BUILD_SCRIPT"'
 
       - name: Deploy Metadata
         if: ${{ inputs.deploy-metadata }}

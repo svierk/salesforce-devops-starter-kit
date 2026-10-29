@@ -36,6 +36,34 @@ Validating a pull request only needs to check what the branch changed - that is 
 [B2's story promotion and release bundle](b2-multi-team-environment-branches.md#three-ways-to-promote) are the exception: environment branches are never merged into each other, so each push carries exactly what one pull request merged - usually one story. Deploy it as a delta with `delta-from: ${{ github.event.before }}`. Otherwise, `delta-from` is for the case where you deliberately want to deploy the difference since a release tag.
 :::
 
+## UI bundles (Multi-Framework)
+
+A Salesforce Multi-Framework project ships React or Angular apps as `UIBundle` metadata, each an npm project of its own under `uiBundles/<name>/`. The bundle deploys with its build output - the `outputDir` of its `ui-bundle.json`, usually `dist/` - which is not committed. Every workflow that deploys therefore takes a `build-script`: an npm script from your root `package.json` that the workflow runs right before the deploy, in every blueprint.
+
+```json
+{
+  "scripts": {
+    "build:ui-bundles": "npm ci --prefix force-app/main/default/uiBundles/myApp && npm run build --prefix force-app/main/default/uiBundles/myApp"
+  }
+}
+```
+
+```yaml
+with:
+  build-script: build:ui-bundles
+```
+
+- **After the login.** The script runs with `SF_TARGET_ORG` set to the org being deployed to, because the UI bundle plugins bake that org's API version into the build. In `pr-validation.yml` it also runs after the code review, so the analyzer never scans the installed dependencies and build output.
+- **Keep `node_modules/` in your `.forceignore`.** The Salesforce project template already lists it; without it, the installed dependencies would be deployed with the bundle.
+
+::: warning Delta skips changes inside a bundle
+In delta mode, sfdx-git-delta only picks up a bundle when its `<name>.uibundle-meta.xml` changes - a change to its sources, e.g. `src/app.tsx`, is left out of the delta manifest without a warning. Deploy projects with UI bundles with `delta: false`, and validate pull requests that change a bundle with `delta: false` as well.
+:::
+
+::: warning The build runs with an authenticated org
+Dependencies and their install scripts run after the login, so they can reach the org the workflow deploys to. Commit the lock file of every bundle, install with `npm ci` and keep the dependencies up to date.
+:::
+
 ## Building blocks
 
 All blueprints use [`get-node-version`](https://github.com/svierk/get-node-version), [`sfdx-cli-setup`](https://github.com/svierk/sfdx-cli-setup) and [`sfdx-login`](https://github.com/svierk/sfdx-login) - the reusable workflows call them for you. The blocks below matter when you compose your own pipeline:
