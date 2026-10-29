@@ -54,8 +54,11 @@ with:
 ```
 
 - **After the login.** The script runs with `SF_TARGET_ORG` set to the org being deployed to, because the UI bundle plugins bake that org's API version into the build. In `pr-validation.yml` it also runs after the code review, so the analyzer never scans the installed dependencies and build output.
-- **Delta works as is.** A change anywhere in a bundle folder puts the whole bundle into the delta manifest, and the deploy picks it up from the working tree - including the fresh build output.
 - **Keep `node_modules/` in your `.forceignore`.** The Salesforce project template already lists it; without it, the installed dependencies would be deployed with the bundle.
+
+::: warning Delta skips changes inside a bundle
+In delta mode, sfdx-git-delta only picks up a bundle when its `<name>.uibundle-meta.xml` changes - a change to its sources, e.g. `src/app.tsx`, is left out of the delta manifest without a warning. Deploy projects with UI bundles with `delta: false`, and validate pull requests that change a bundle with `delta: false` as well.
+:::
 
 ::: warning The build runs with an authenticated org
 Dependencies and their install scripts run after the login, so they can reach the org the workflow deploys to. Commit the lock file of every bundle, install with `npm ci` and keep the dependencies up to date.
