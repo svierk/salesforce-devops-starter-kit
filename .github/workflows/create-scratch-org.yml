@@ -159,7 +159,7 @@ jobs:
 
       - name: Create Scratch Org
         id: scratch
-        uses: svierk/sfdx-create-scratch-org@v1.3.2
+        uses: svierk/sfdx-create-scratch-org@v1.3.3
         with:
           target-dev-hub: devhub
           definition-file: ${{ inputs.definition-file }}
