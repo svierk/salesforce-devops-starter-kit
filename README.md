@@ -170,7 +170,7 @@ permissions:
 
 jobs:
   pr-validation:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.7.1
     with:
       source-dir: force-app
     secrets:

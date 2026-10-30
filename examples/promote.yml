@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   promote:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.1
     with:
       target: ${{ inputs.target }}
       sources: ${{ inputs.sources }}
@@ -63,7 +63,7 @@ jobs:
 #         fail-fast: false
 #         matrix:
 #           target: [integration, uat, preprod]
-#       uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.0
+#       uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.1
 #       with:
 #         target: ${{ matrix.target }}
 #         sources: main

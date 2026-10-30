@@ -267,7 +267,7 @@ permissions:
 
 jobs:
   validate:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/pr-validation.yml@v1.7.1
     with:
       source-dir: force-app
       test-level: RunLocalTests
@@ -293,7 +293,7 @@ permissions:
 
 jobs:
   deploy:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.7.1
     with:
       source-dir: force-app
       target-org-alias: ${{ github.ref_name }}
@@ -324,7 +324,7 @@ Validation needs a twin per branch - `integration-validation`, `uat-validation`,
 ```yaml
 jobs:
   promote:
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/promote.yml@v1.7.1
     with:
       target: uat
       sources: feature/story-123
@@ -354,7 +354,7 @@ jobs:
       fail-fast: false
       matrix:
         branch: [integration, uat, preprod, main]
-    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.7.0
+    uses: svierk/salesforce-devops-starter-kit/.github/workflows/deployment.yml@v1.7.1
     with:
       ref: ${{ matrix.branch }}
       target-org-alias: ${{ matrix.branch }}
