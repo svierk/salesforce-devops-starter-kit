@@ -177,7 +177,7 @@ jobs:
       - name: Prepare Agents
         id: agents
         if: ${{ inputs.deploy-agents }}
-        uses: svierk/sfdx-agent-deploy@v1.0.0
+        uses: svierk/sfdx-agent-deploy@v1.0.1
         with:
           phase: prepare
           source-dir: ${{ inputs.source-dir }}
@@ -221,7 +221,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-agent-deploy@v1.0.0
+        uses: svierk/sfdx-agent-deploy@v1.0.1
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ steps.scratch.outputs.username }}

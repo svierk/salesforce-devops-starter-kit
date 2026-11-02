@@ -150,7 +150,7 @@ jobs:
       - name: Prepare Agents
         id: agents
         if: ${{ inputs.validate-agents }}
-        uses: svierk/sfdx-agent-deploy@v1.0.0
+        uses: svierk/sfdx-agent-deploy@v1.0.1
         with:
           phase: prepare
           source-dir: ${{ inputs.source-dir }}
@@ -176,7 +176,7 @@ jobs:
 
       - name: Validate Agents
         if: ${{ inputs.validate-agents }}
-        uses: svierk/sfdx-agent-deploy@v1.0.0
+        uses: svierk/sfdx-agent-deploy@v1.0.1
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ inputs.target-org-alias }}

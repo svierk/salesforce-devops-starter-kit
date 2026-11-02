@@ -116,7 +116,7 @@ To compose your own pipeline, call [`sfdx-agent-deploy`](https://github.com/svie
 ```yaml
 - name: Prepare Agents
   id: agents
-  uses: svierk/sfdx-agent-deploy@v1.0.0
+  uses: svierk/sfdx-agent-deploy@v1.0.1
   with:
     phase: prepare
     source-dir: force-app
@@ -130,7 +130,7 @@ To compose your own pipeline, call [`sfdx-agent-deploy`](https://github.com/svie
     target-org: ci
 
 - name: Deploy Agents
-  uses: svierk/sfdx-agent-deploy@v1.0.0
+  uses: svierk/sfdx-agent-deploy@v1.0.1
   with:
     source-dir: force-app
     target-org: ci
