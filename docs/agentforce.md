@@ -57,9 +57,9 @@ An agent built with Agent Script can only be deployed as compiled metadata toget
 
 Set `"sourceApiVersion": "68.0"` in `sfdx-project.json`. The `AiAgentDefinition` and `AiAgentDefinitionVersion` types [need API version 68](https://developer.salesforce.com/docs/ai/agentforce/guide/agent-dx-deploy-metadata.html). With an older version, a deployment that contains them fails with `Not available for deploy for this API version`.
 
-### 3. Extend the connected app
+### 3. Extend the app of your JWT login
 
-Add the OAuth scopes `chatbot_api`, `sfap_api` and `web` to the connected app of your [JWT login](authentication.md), next to `api` and `refresh_token`. The Salesforce CLI needs them to reach the agent APIs.
+Add the OAuth scope `web` to the connected app or external client app of your [JWT login](authentication.md), next to `api` and `refresh_token`. The Salesforce CLI needs it to validate, publish and activate an agent. Running agent tests works without it.
 
 Each target org needs Einstein and Agentforce enabled, and the integration user needs the [permissions to publish agents](https://developer.salesforce.com/docs/ai/agentforce/guide/agent-dx-deploy-metadata.html). A scratch org definition has to enable Agentforce as well:
 

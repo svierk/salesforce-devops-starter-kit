@@ -31,7 +31,7 @@ Follow [authentication.md](authentication.md) to authenticate your org with the 
 If your blueprint uses more than one target org, create one **GitHub Environment per org** and store these three secrets in each - the deployment workflow resolves them per environment, so one caller serves every stage. Pull request validation can use the same mechanism through its own `environment` input; scratch org CI keeps using the repository secrets of your Dev Hub.
 
 ::: tip Agentforce agents
-Agents and agent tests in your source are handled automatically, but the connected app needs additional OAuth scopes. See the [Agentforce guide](agentforce.md).
+Agents and agent tests in your source are handled automatically, but the app of your JWT login needs an additional OAuth scope. See the [Agentforce guide](agentforce.md).
 :::
 
 ## 4. Choose a starting point
