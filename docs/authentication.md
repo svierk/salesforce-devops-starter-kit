@@ -20,11 +20,15 @@ Best for production and long-lived sandbox connections, as it does not rely on a
    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt
    ```
 
-2. Create a **connected app** in the org, enable OAuth, upload `server.crt`, and enable the JWT flow. Pre-authorize the integration user via a permission set or profile. See the Salesforce guide [Authorize an Org Using the JWT Flow](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm).
+2. Create a **connected app** in the org, or an **external client app** if the org doesn't allow creating connected apps any more. Enable OAuth, upload `server.crt`, and enable the JWT flow. Pre-authorize the integration user via a permission set or profile. See the Salesforce guide [Authorize an Org Using the JWT Flow](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm).
+
+   Projects with [Agentforce agents](agentforce.md) need the OAuth scope `web` on this app, next to `api` and `refresh_token`. The Salesforce CLI uses it when it validates, publishes and activates an agent.
+
+   A new external client app can take a few minutes to become active. Until then, the login fails with `client identifier invalid`.
 
 3. Store these three values as repository secrets:
 
-   - `SFDX_CONSUMER_KEY` - the connected app's consumer key (client ID)
+   - `SFDX_CONSUMER_KEY` - the app's consumer key (client ID)
    - `SFDX_JWT_SECRET_KEY` - the **contents** of `server.key`
    - `SFDX_USERNAME` - the integration user's username
 

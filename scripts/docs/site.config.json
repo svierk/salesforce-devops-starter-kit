@@ -70,7 +70,12 @@
         {
           "repo": "sfdx-run-tests",
           "icon": "✅",
-          "tagline": "Run Apex, LWC (Jest) and Flow tests with coverage reporting."
+          "tagline": "Run Apex, LWC (Jest), Flow and Agentforce agent tests with coverage reporting."
+        },
+        {
+          "repo": "sfdx-agent-deploy",
+          "icon": "🤖",
+          "tagline": "Publish, activate and validate Agentforce agents and deploy their tests."
         }
       ]
     },
