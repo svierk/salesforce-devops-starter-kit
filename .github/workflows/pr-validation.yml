@@ -2,7 +2,8 @@ name: PR Validation
 
 # Reusable workflow that validates a pull request without changing the target
 # org: it runs static code analysis and a check-only (dry-run) delta deployment
-# including Apex tests. Call it from your own repository via `uses:`.
+# including Apex tests, and compiles the Agent Script of the Agentforce agents.
+# Call it from your own repository via `uses:`.
 
 on:
   workflow_call:
@@ -47,6 +48,11 @@ on:
         required: false
         type: string
         default: '3'
+      validate-agents:
+        description: Compile the Agent Script of the Agentforce agents found in source-dir against the validation org. A project without agents skips this.
+        required: false
+        type: boolean
+        default: true
       environment:
         description: Optional GitHub Environment to validate in - its environment-scoped secrets select the org to validate against, e.g. one environment per target branch. Use an environment without required reviewers or branch restrictions, or every pull request waits for an approval or is rejected. Leave empty to use the repository secrets.
         required: false
@@ -138,14 +144,40 @@ jobs:
           SF_TARGET_ORG: ${{ inputs.target-org-alias }}
         run: '"$PACKAGE_MANAGER" run "$BUILD_SCRIPT"'
 
+      # Finds what the validation has to leave out: test definitions need a published
+      # agent, which a pull request may only bring, and an active agent version can't
+      # be deployed.
+      - name: Prepare Agents
+        id: agents
+        if: ${{ inputs.validate-agents }}
+        uses: svierk/sfdx-agent-deploy@v1.0.0
+        with:
+          phase: prepare
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ inputs.target-org-alias }}
+
       - name: Validate Deployment (dry-run)
-        uses: svierk/sfdx-deploy@v1.3.1
+        env:
+          # For a "replaceWithEnv" replacement in sfdx-project.json, e.g. the agent
+          # user in an Agent Script, which is different in every org. Set it as a
+          # repository or environment variable.
+          SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
+        uses: svierk/sfdx-deploy@v1.4.0
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
+          exclude: ${{ steps.agents.outputs.exclude }}
           delta: ${{ inputs.delta }}
           delta-from: origin/${{ github.base_ref }}
           delta-to: HEAD
           target-org: ${{ inputs.target-org-alias }}
           test-level: ${{ inputs.test-level }}
           tests: ${{ inputs.apex-tests }}
+          dry-run: true
+
+      - name: Validate Agents
+        if: ${{ inputs.validate-agents }}
+        uses: svierk/sfdx-agent-deploy@v1.0.0
+        with:
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ inputs.target-org-alias }}
           dry-run: true

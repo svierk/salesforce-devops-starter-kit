@@ -22,6 +22,8 @@ Best for production and long-lived sandbox connections, as it does not rely on a
 
 2. Create a **connected app** in the org, enable OAuth, upload `server.crt`, and enable the JWT flow. Pre-authorize the integration user via a permission set or profile. See the Salesforce guide [Authorize an Org Using the JWT Flow](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm).
 
+   Projects with [Agentforce agents](agentforce.md) need more OAuth scopes on this app: `chatbot_api`, `sfap_api` and `web`, next to `api` and `refresh_token`. The Salesforce CLI uses them to reach the agent APIs when it validates and publishes an agent.
+
 3. Store these three values as repository secrets:
 
    - `SFDX_CONSUMER_KEY` - the connected app's consumer key (client ID)

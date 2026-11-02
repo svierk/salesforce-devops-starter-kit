@@ -3,7 +3,8 @@ name: Scratch Org CI
 # Reusable workflow that runs a full scratch org lifecycle: it authenticates to
 # the Dev Hub, creates a scratch org, optionally installs dependency packages,
 # deploys the source, optionally assigns permissions and runs anonymous Apex
-# setup scripts, runs Apex tests, and always deletes the scratch org again.
+# setup scripts, brings the Agentforce agents to the org, runs Apex tests and,
+# on request, agent tests, and always deletes the scratch org again.
 
 on:
   workflow_call:
@@ -60,6 +61,31 @@ on:
         default: ''
       apex-file-path:
         description: Comma-separated anonymous Apex file(s) or glob(s) to execute before the tests, e.g. "./scripts/apex/setup/*.apex". Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      deploy-agents:
+        description: Bring the Agentforce agents found in source-dir to the org after the deployment - publish and activate them, then deploy their tests. The scratch org definition has to enable Agentforce. A project without agents skips this.
+        required: false
+        type: boolean
+        default: true
+      activate-agents:
+        description: Activate the agent versions after publishing. Set to false to leave the currently active versions in place.
+        required: false
+        type: boolean
+        default: true
+      agent-post-publish-dir:
+        description: Comma-separated or multi-line list of source directories to deploy once the agents exist, e.g. permission sets granting access to an agent. Keep them outside of source-dir. Leave empty to skip.
+        required: false
+        type: string
+        default: ''
+      agent-tests:
+        description: Run the agent tests of the project against the scratch org. Opt-in, because they consume Einstein Requests or Flex Credits and can change org data. Needs deploy-agents. A project without agent tests skips this.
+        required: false
+        type: boolean
+        default: false
+      agent-test-names:
+        description: Comma-separated or multi-line list of agent tests to run instead of all tests of the project. Leave empty to run all.
         required: false
         type: string
         default: ''
@@ -146,10 +172,27 @@ jobs:
           SF_TARGET_ORG: ${{ steps.scratch.outputs.username }}
         run: '"$PACKAGE_MANAGER" run "$BUILD_SCRIPT"'
 
+      # Finds what the deployment has to leave out: test definitions and permission
+      # sets need a published agent, and an active agent version can't be deployed.
+      - name: Prepare Agents
+        id: agents
+        if: ${{ inputs.deploy-agents }}
+        uses: svierk/sfdx-agent-deploy@v1.0.0
+        with:
+          phase: prepare
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ steps.scratch.outputs.username }}
+
       - name: Deploy Metadata
-        uses: svierk/sfdx-deploy@v1.3.1
+        env:
+          # For a "replaceWithEnv" replacement in sfdx-project.json, e.g. the agent
+          # user in an Agent Script, which is different in every org. Set it as a
+          # repository or environment variable.
+          SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
+        uses: svierk/sfdx-deploy@v1.4.0
         with:
           source-dir: ${{ inputs.source-dir }}
+          exclude: ${{ steps.agents.outputs.exclude }}
           target-org: ${{ steps.scratch.outputs.username }}
           destructive-changes: false # fresh scratch org: additive deploy, nothing to delete
 
@@ -169,10 +212,28 @@ jobs:
           file-path: ${{ inputs.apex-file-path }}
           target-org: ${{ steps.scratch.outputs.username }}
 
+      # Runs after everything the agents use has arrived: a publish does not deploy
+      # the Apex classes and flows behind the actions, and the agent user has to exist.
+      - name: Deploy Agents
+        if: ${{ inputs.deploy-agents }}
+        env:
+          # For a "replaceWithEnv" replacement in sfdx-project.json, e.g. the agent
+          # user in an Agent Script, which is different in every org. Set it as a
+          # repository or environment variable.
+          SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
+        uses: svierk/sfdx-agent-deploy@v1.0.0
+        with:
+          source-dir: ${{ inputs.source-dir }}
+          target-org: ${{ steps.scratch.outputs.username }}
+          activate: ${{ inputs.activate-agents }}
+          post-publish-dir: ${{ inputs.agent-post-publish-dir }}
+
       - name: Run Tests
-        uses: svierk/sfdx-run-tests@v1.3.0
+        uses: svierk/sfdx-run-tests@v1.4.0
         with:
           apex: true
+          agent: ${{ inputs.deploy-agents && inputs.agent-tests }}
+          agent-tests: ${{ inputs.agent-test-names }}
           target-org: ${{ steps.scratch.outputs.username }}
           test-level: ${{ inputs.test-level }}
           apex-tests: ${{ inputs.apex-tests }}
@@ -184,6 +245,14 @@ jobs:
         with:
           name: apex-test-results
           path: ./tests/apex
+
+      - name: Upload Agent Test Results
+        if: ${{ always() && inputs.deploy-agents && inputs.agent-tests }}
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: agent-test-results
+          path: ./tests/agent
+          if-no-files-found: ignore
 
       # Always clean up - but only an org that was created. Without one, the
       # step would fail as well and hide why the scratch org creation failed.

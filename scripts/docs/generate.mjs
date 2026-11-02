@@ -314,7 +314,8 @@ function buildSidebar(workflowMeta, blockMeta) {
       collapsed: false,
       items: [
         { text: 'Getting Started', link: '/getting-started' },
-        { text: 'Authentication', link: '/authentication' }
+        { text: 'Authentication', link: '/authentication' },
+        { text: 'Agentforce', link: '/agentforce' }
       ]
     },
     // Hand-written, unlike the two catalogs below - the strategy layer is

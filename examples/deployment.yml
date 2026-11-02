@@ -37,6 +37,9 @@ jobs:
       # Anonymous Apex post-deploy scripts (data migrations, cache clearing, ...),
       # executed in alphabetical order after a successful, non-dry-run deployment:
       # apex-file-path: ./scripts/apex/post-deploy/*.apex
+      # Agentforce agents in source-dir are published and activated automatically.
+      # Run their tests against this org as well (consumes credits, can change data):
+      # agent-tests: true
     secrets:
       SFDX_CONSUMER_KEY: ${{ secrets.SFDX_CONSUMER_KEY }}
       SFDX_JWT_SECRET_KEY: ${{ secrets.SFDX_JWT_SECRET_KEY }}

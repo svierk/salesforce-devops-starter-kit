@@ -26,20 +26,21 @@ The full **[documentation site](https://svierk.github.io/salesforce-devops-start
 
 Each building block lives in its own repository so it can be versioned and consumed independently.
 
-| Action                                                                              | Purpose                                                             |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version)                   | Resolve and set up the Node.js version from `package.json`          |
-| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup)                       | Install the Salesforce CLI and related plugins                      |
-| [🔐 sfdx-login](https://github.com/svierk/sfdx-login)                               | Authenticate to an org via SFDX Auth URL or JWT                     |
-| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org)     | Create a scratch org (outputs `username` / `org-id`)                |
-| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org)     | Delete a scratch org (cleanup)                                      |
-| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy)                             | Deploy metadata, with delta and validation-only (dry-run) modes     |
-| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests)                       | Run Apex, LWC (Jest) and Flow tests with coverage reporting         |
-| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review)                   | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint  |
-| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org                 |
-| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import)                   | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)        |
-| [🛡️ sfdx-assign-permissions](https://github.com/svierk/sfdx-assign-permissions)     | Assign permission sets, permission set groups and licenses to users |
-| [📜 sfdx-apex-execute](https://github.com/svierk/sfdx-apex-execute)                 | Execute anonymous Apex, e.g. post-deploy scripts or data migrations |
+| Action                                                                              | Purpose                                                              |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [🕵🏻 get-node-version](https://github.com/svierk/get-node-version)                   | Resolve and set up the Node.js version from `package.json`           |
+| [⚙️ sfdx-cli-setup](https://github.com/svierk/sfdx-cli-setup)                       | Install the Salesforce CLI and related plugins                       |
+| [🔐 sfdx-login](https://github.com/svierk/sfdx-login)                               | Authenticate to an org via SFDX Auth URL or JWT                      |
+| [🌩️ sfdx-create-scratch-org](https://github.com/svierk/sfdx-create-scratch-org)     | Create a scratch org (outputs `username` / `org-id`)                 |
+| [🗑️ sfdx-delete-scratch-org](https://github.com/svierk/sfdx-delete-scratch-org)     | Delete a scratch org (cleanup)                                       |
+| [🚀 sfdx-deploy](https://github.com/svierk/sfdx-deploy)                             | Deploy metadata, with delta and validation-only (dry-run) modes      |
+| [✅ sfdx-run-tests](https://github.com/svierk/sfdx-run-tests)                       | Run Apex, LWC (Jest), Flow and agent tests with coverage reporting   |
+| [🤖 sfdx-agent-deploy](https://github.com/svierk/sfdx-agent-deploy)                 | Publish, activate and validate Agentforce agents, deploy their tests |
+| [🔎 sfdx-code-review](https://github.com/svierk/sfdx-code-review)                   | Static quality gate: Salesforce Code Analyzer, Prettier and ESLint   |
+| [📦 sfdx-package-installation](https://github.com/svierk/sfdx-package-installation) | Install (managed/unlocked) packages on a target org                  |
+| [💾 sfdx-data-import](https://github.com/svierk/sfdx-data-import)                   | Import records via Bulk API 2.0 (CSV) or sObject Tree (JSON)         |
+| [🛡️ sfdx-assign-permissions](https://github.com/svierk/sfdx-assign-permissions)     | Assign permission sets, permission set groups and licenses to users  |
+| [📜 sfdx-apex-execute](https://github.com/svierk/sfdx-apex-execute)                 | Execute anonymous Apex, e.g. post-deploy scripts or data migrations  |
 
 ## 🏗️ Architecture
 
@@ -60,6 +61,7 @@ flowchart TD
     subgraph prv [PR Validation]
         direction TB
         P --> Pd[deploy · delta · dry-run · tests]
+        Pd --> Pa[agent-deploy · validate]
     end
 
     subgraph cso [Create Scratch Org]
@@ -69,7 +71,8 @@ flowchart TD
         H --> AP[assign-permissions]
         AP --> I[data-import]
         I --> AX[apex-execute · setup]
-        AX --> PW[generate password]
+        AX --> AG[agent-deploy]
+        AG --> PW[generate password]
     end
 
     subgraph sci [Scratch Org CI]
@@ -78,13 +81,16 @@ flowchart TD
         G2 --> H2[deploy]
         H2 --> AP2[assign-permissions]
         AP2 --> AX2[apex-execute · setup]
-        AX2 --> J[run-tests]
+        AX2 --> AG2[agent-deploy]
+        AG2 --> J[run-tests]
         J --> L[delete-scratch-org · always]
     end
 
     subgraph dep [Deployment]
         direction TB
         M --> AX3[apex-execute · post-deploy]
+        AX3 --> AG3[agent-deploy]
+        AG3 --> T3[run-tests · agents, opt-in]
     end
 
     classDef setup fill:#e0e7ff,stroke:#1d4ed8,color:#0b1a4a;
@@ -92,6 +98,12 @@ flowchart TD
     class A,B,C,D setup;
     class E gate;
 ```
+
+## 🤖 Agentforce
+
+The kit is Agentforce-ready: agents and agent tests in your source are picked up automatically, on any org. Pull requests compile the Agent Script, deployments publish changed agents and activate them, and agent tests run on request. A project without agents skips all of this.
+
+See the **[Agentforce guide](https://svierk.github.io/salesforce-devops-starter-kit/agentforce)** for the setup and the limits.
 
 ## 🚀 Quick Start
 
@@ -153,10 +165,10 @@ For common scenarios you don't have to wire the blocks together yourself - call 
 
 | Workflow                                                           | Purpose                                                                                                                                     |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [pr-validation.yml](.github/workflows/pr-validation.yml)           | Validate a pull request: static analysis + check-only (delta) deployment with tests                                                         |
+| [pr-validation.yml](.github/workflows/pr-validation.yml)           | Validate a pull request: static analysis + check-only (delta) deployment with tests + Agent Script compile                                  |
 | [create-scratch-org.yml](.github/workflows/create-scratch-org.yml) | Self-service scratch org provisioning: create → install packages → deploy → assign permissions → import data → run Apex → generate password |
 | [scratch-org-ci.yml](.github/workflows/scratch-org-ci.yml)         | Full scratch org lifecycle for CI: create → deploy → assign permissions → run Apex → test → delete                                          |
-| [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata to a sandbox or production org, with optional post-deploy Apex scripts                                                      |
+| [deployment.yml](.github/workflows/deployment.yml)                 | Deploy metadata and Agentforce agents to a sandbox or production org, with optional post-deploy Apex scripts and agent tests                |
 | [promote.yml](.github/workflows/promote.yml)                       | Prepare a promotion between environment branches as a pull request: story promotion, release bundles and the sync after a release           |
 
 Call one from your own repository like this:
