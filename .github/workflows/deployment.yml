@@ -182,6 +182,9 @@ jobs:
           test-level: ${{ inputs.test-level }}
           tests: ${{ inputs.apex-tests }}
           dry-run: ${{ inputs.dry-run }}
+          # A CI checkout has no source tracking data, so in a tracked org every earlier
+          # deployment of a file would look like a conflict. Git is the source of truth.
+          ignore-conflicts: true
 
       # A dry-run saves nothing, so post-deploy scripts would run against
       # metadata that was never deployed - only run them on a real deployment.
