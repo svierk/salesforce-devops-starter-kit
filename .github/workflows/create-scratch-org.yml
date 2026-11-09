@@ -187,7 +187,7 @@ jobs:
 
       - name: Install Dependency Packages
         if: ${{ inputs.install-packages && inputs.packages != '' }}
-        uses: svierk/sfdx-package-installation@v1.3.0
+        uses: svierk/sfdx-package-installation@v1.4.0
         with:
           packages: ${{ inputs.packages }}
           target-org: ${{ steps.scratch.outputs.username }}
@@ -224,7 +224,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-deploy@v1.4.0
+        uses: svierk/sfdx-deploy@v1.4.2
         with:
           source-dir: ${{ inputs.source-dir }}
           exclude: ${{ steps.agents.outputs.exclude }}
