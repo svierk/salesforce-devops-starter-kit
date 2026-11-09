@@ -126,7 +126,7 @@ jobs:
 
       - name: Upload SARIF
         if: ${{ inputs.run-code-review }}
-        uses: github/codeql-action/upload-sarif@v4.39.1
+        uses: github/codeql-action/upload-sarif@v4.39.3
         with:
           sarif_file: results.sarif
 
@@ -162,7 +162,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-deploy@v1.4.0
+        uses: svierk/sfdx-deploy@v1.4.2
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           exclude: ${{ steps.agents.outputs.exclude }}
