@@ -172,7 +172,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-deploy@v1.4.2
+        uses: svierk/sfdx-deploy@v1.5.0
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           exclude: ${{ steps.agents.outputs.exclude }}
@@ -214,7 +214,7 @@ jobs:
 
       - name: Run Agent Tests
         if: ${{ inputs.deploy-agents && inputs.agent-tests && !inputs.dry-run }}
-        uses: svierk/sfdx-run-tests@v1.4.0
+        uses: svierk/sfdx-run-tests@v1.5.0
         with:
           apex: false
           agent: true
