@@ -143,7 +143,7 @@ jobs:
 
       - name: Create Scratch Org
         id: scratch
-        uses: svierk/sfdx-create-scratch-org@v1.3.3
+        uses: svierk/sfdx-create-scratch-org@v1.3.4
         with:
           target-dev-hub: devhub
           definition-file: ${{ inputs.definition-file }}
@@ -189,7 +189,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-deploy@v1.4.2
+        uses: svierk/sfdx-deploy@v1.5.0
         with:
           source-dir: ${{ inputs.source-dir }}
           exclude: ${{ steps.agents.outputs.exclude }}
@@ -229,7 +229,7 @@ jobs:
           post-publish-dir: ${{ inputs.agent-post-publish-dir }}
 
       - name: Run Tests
-        uses: svierk/sfdx-run-tests@v1.4.0
+        uses: svierk/sfdx-run-tests@v1.5.0
         with:
           apex: true
           agent: ${{ inputs.deploy-agents && inputs.agent-tests }}
