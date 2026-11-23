@@ -150,7 +150,7 @@ jobs:
       - name: Prepare Agents
         id: agents
         if: ${{ inputs.validate-agents }}
-        uses: svierk/sfdx-agent-deploy@v1.0.1
+        uses: svierk/sfdx-agent-deploy@v1.1.0
         with:
           phase: prepare
           source-dir: ${{ inputs.source-dir }}
@@ -162,7 +162,7 @@ jobs:
           # user in an Agent Script, which is different in every org. Set it as a
           # repository or environment variable.
           SF_AGENT_USERNAME: ${{ vars.SF_AGENT_USERNAME }}
-        uses: svierk/sfdx-deploy@v1.5.0
+        uses: svierk/sfdx-deploy@v1.6.0
         with:
           source-dir: ${{ inputs.delta == false && inputs.source-dir || '' }}
           exclude: ${{ steps.agents.outputs.exclude }}
@@ -176,7 +176,7 @@ jobs:
 
       - name: Validate Agents
         if: ${{ inputs.validate-agents }}
-        uses: svierk/sfdx-agent-deploy@v1.0.1
+        uses: svierk/sfdx-agent-deploy@v1.1.0
         with:
           source-dir: ${{ inputs.source-dir }}
           target-org: ${{ inputs.target-org-alias }}
