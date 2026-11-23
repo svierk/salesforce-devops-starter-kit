@@ -68,7 +68,7 @@ jobs:
       - name: Create GitHub App Token
         id: app-token
         if: ${{ env.USE_APP == 'true' }}
-        uses: actions/create-github-app-token@v3.3.0
+        uses: actions/create-github-app-token@v3.4.0
         with:
           app-id: ${{ secrets.PROMOTION_APP_ID }}
           private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
